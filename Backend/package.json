@@ -1,0 +1,27 @@
+{
+  "name": "saaluvesa-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "db:sync": "node src/scripts/sync.js",
+    "db:seed-products": "node src/scripts/seed-products.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "mysql2": "^3.12.0",
+    "nodemailer": "^6.9.16",
+    "pdfkit": "^0.16.0",
+    "sequelize": "^6.37.5",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": { "nodemon": "^3.1.9" }
+}

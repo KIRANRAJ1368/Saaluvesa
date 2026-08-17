@@ -1,0 +1,130 @@
+.connect {
+  background: var(--color-ivory);
+  padding: var(--gap-section) 0;
+  position: relative;
+}
+
+.connect__grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 56px;
+  align-items: start;
+  position: relative;
+  z-index: 1;
+}
+
+.connect__eyebrow {
+  color: var(--color-mint-dim);
+  margin-bottom: 14px;
+}
+
+.connect h2 {
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  color: var(--color-navy);
+  line-height: 1.18;
+  font-weight: 700;
+  margin: 0 0 18px;
+}
+
+.connect p {
+  color: var(--color-ink-soft);
+  line-height: 1.68;
+  max-width: 60ch;
+  margin: 0 0 26px;
+}
+
+.connect__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.connect__box {
+  background: var(--color-white);
+  border: 1px solid var(--color-line);
+  box-shadow: 0 12px 32px rgba(7, 16, 91, 0.06);
+  border-radius: var(--radius-md);
+  padding: 40px 36px;
+  display: flex;
+  flex-direction: column;
+}
+
+.connect__box h3 {
+  font-family: var(--font-display);
+  color: var(--color-navy);
+  font-size: 1.35rem;
+  margin: 0 0 12px;
+  font-weight: 700;
+}
+
+.connect__box > p {
+  margin: 0 0 24px;
+  font-size: 0.94rem;
+  line-height: 1.6;
+  color: var(--color-ink-soft);
+}
+
+.connect__steps {
+  list-style: none;
+  margin: 0 0 26px 0;
+  padding: 0 0 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  border-left: 1px dashed var(--color-line);
+  position: relative;
+}
+
+.connect__steps li {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  position: relative;
+}
+
+.connect__steps-mark {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--color-navy);
+  border: 1.5px solid var(--color-mint-dim);
+  color: var(--color-mint);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -36px;
+  z-index: 1;
+}
+
+.connect__steps h3 {
+  font-family: var(--font-display);
+  color: var(--color-navy);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 3px 0 4px;
+}
+
+.connect__steps p {
+  color: var(--color-ink-soft);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.connect__box-cta {
+  margin-top: 4px;
+}
+
+@media (max-width: 900px) {
+  .connect__grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+}

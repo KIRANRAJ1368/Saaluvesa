@@ -1,0 +1,170 @@
+:root {
+  --anim-y: 28px;
+  --anim-x: 26px;
+}
+
+/* ---------- Keyframes (from-only; end state = element's natural state) ---------- */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(var(--anim-y)); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+}
+@keyframes fadeLeft {
+  from { opacity: 0; transform: translateX(calc(var(--anim-x) * -1)); }
+}
+@keyframes fadeRight {
+  from { opacity: 0; transform: translateX(var(--anim-x)); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(var(--anim-y)) scale(0.97); }
+}
+@keyframes pageFadeIn {
+  from { opacity: 0; }
+}
+@keyframes navFadeDown {
+  from { opacity: 0; transform: translateY(-8px); }
+}
+
+/* ---------- Scroll reveal: hidden until .is-visible ---------- */
+[data-animate] {
+  opacity: 0;
+}
+[data-animate="fade-up"]    { transform: translateY(var(--anim-y)); }
+[data-animate="fade-left"]  { transform: translateX(calc(var(--anim-x) * -1)); }
+[data-animate="fade-right"] { transform: translateX(var(--anim-x)); }
+[data-animate="scale-in"]   { transform: scale(0.94); }
+[data-animate="card"]       { transform: translateY(var(--anim-y)) scale(0.97); }
+[data-animate="fade-in"]    { transform: none; }
+
+[data-animate].is-visible {
+  opacity: 1;
+  transform: none;
+  animation-duration: 0.7s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: backwards;
+}
+[data-animate="fade-up"].is-visible    { animation-name: fadeUp; }
+[data-animate="fade-left"].is-visible  { animation-name: fadeLeft; }
+[data-animate="fade-right"].is-visible { animation-name: fadeRight; }
+[data-animate="scale-in"].is-visible   { animation-name: scaleIn; }
+[data-animate="card"].is-visible       { animation-name: cardIn; }
+[data-animate="fade-in"].is-visible    { animation-name: fadeIn; }
+
+/* ---------- Staggered delay helpers ---------- */
+.delay-1 { animation-delay: 0.08s; }
+.delay-2 { animation-delay: 0.16s; }
+.delay-3 { animation-delay: 0.24s; }
+.delay-4 { animation-delay: 0.32s; }
+.delay-5 { animation-delay: 0.40s; }
+
+/* ---------- Page / route transitions ---------- */
+.home-page,
+.about-page,
+.products-page,
+.product-details-page,
+.contact-page {
+  animation: pageFadeIn 0.5s var(--ease) backwards;
+}
+
+/* ---------- Hero entrances (load-time, no scroll needed) ---------- */
+.hero__copy {
+  animation: fadeUp 0.85s var(--ease) backwards;
+}
+.hero__visual {
+  animation: scaleIn 1s var(--ease) 0.2s backwards;
+}
+.hero__badge--tl {
+  animation: fadeLeft 0.7s var(--ease) 0.55s backwards;
+}
+.hero__badge--br {
+  animation: fadeRight 0.7s var(--ease) 0.7s backwards;
+}
+
+/* ---------- Page banner ---------- */
+.page-banner__content {
+  animation: fadeUp 0.75s var(--ease) 0.15s backwards;
+}
+
+/* ---------- Mobile nav menu ---------- */
+.site-nav--mobile {
+  animation: navFadeDown 0.28s var(--ease) backwards;
+}
+
+/* ---------- Hover: buttons ---------- */
+.btn {
+  transition:
+    transform 0.25s var(--ease),
+    background 0.25s var(--ease),
+    color 0.25s var(--ease),
+    border-color 0.25s var(--ease),
+    box-shadow 0.25s var(--ease);
+}
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(5, 10, 60, 0.18);
+}
+.btn:active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 10, 60, 0.12);
+}
+.btn--mint:hover {
+  box-shadow: 0 8px 24px rgba(121, 246, 194, 0.35);
+}
+
+/* ---------- Hover: vision & mission cards ---------- */
+.about-vm-card {
+  transition:
+    transform 0.3s var(--ease),
+    box-shadow 0.3s var(--ease);
+}
+.about-vm-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(7, 16, 91, 0.12);
+}
+
+/* ---------- Hover: connect panel ---------- */
+.connect__box {
+  transition:
+    transform 0.3s var(--ease),
+    box-shadow 0.3s var(--ease);
+}
+.connect__box:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(7, 16, 91, 0.14);
+}
+
+/* ---------- Hover: connect steps marks ---------- */
+.connect__steps-mark {
+  transition:
+    background 0.25s var(--ease),
+    transform 0.25s var(--ease);
+}
+.connect__steps li:hover .connect__steps-mark {
+  transform: scale(1.12);
+}
+
+/* ---------- Mobile: shorter travel distances (avoid edge overflow) ---------- */
+@media (max-width: 768px) {
+  :root {
+    --anim-y: 18px;
+    --anim-x: 14px;
+  }
+}
+
+/* ---------- Reduced motion override ---------- */
+@media (prefers-reduced-motion: reduce) {
+  [data-animate],
+  [data-animate].is-visible,
+  .home-page, .about-page, .products-page, .product-details-page, .contact-page,
+  .hero__copy, .hero__visual, .hero__badge--tl, .hero__badge--br,
+  .page-banner__content, .site-nav--mobile {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}

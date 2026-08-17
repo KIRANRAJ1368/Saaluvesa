@@ -1,0 +1,70 @@
+/* ------------------------------------------------------------------ *
+ * Saaluvesa Admin — design tokens & base                             *
+ * Brand palette mirrors the public site (navy + mint on ivory).      *
+ * ------------------------------------------------------------------ */
+
+:root {
+  --admin-navy: #07105b;
+  --admin-navy-deep: #050a3c;
+  --admin-navy-soft: #141b6e;
+  --admin-mint: #79f6c2;
+  --admin-mint-soft: #c9fbe6;
+  --admin-mint-dim: #3fcf9a;
+  --admin-ivory: #f5f7f4;
+  --admin-ivory-deep: #eaeee7;
+  --admin-white: #ffffff;
+  --admin-ink: #0b0f2b;
+  --admin-ink-soft: rgba(11, 15, 43, 0.64);
+  --admin-ink-faint: rgba(11, 15, 43, 0.42);
+  --admin-line: rgba(7, 16, 91, 0.12);
+  --admin-line-soft: rgba(7, 16, 91, 0.06);
+  --admin-danger: #e5484d;
+  --admin-danger-soft: #fdecec;
+  --admin-amber: #f59e0b;
+  --admin-amber-soft: #fff3dc;
+  --admin-violet: #7c5cff;
+  --admin-violet-soft: #f0ebff;
+  --admin-radius-sm: 10px;
+  --admin-radius-md: 18px;
+  --admin-radius-lg: 26px;
+  --admin-shadow: 0 18px 44px rgba(5, 10, 60, 0.1);
+  --admin-shadow-soft: 0 10px 30px rgba(5, 10, 60, 0.05);
+  --admin-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --admin-font-display: "Space Grotesk", "Segoe UI", sans-serif;
+  --admin-font-body: "Inter", "Segoe UI", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-width: 320px;
+  background: var(--admin-ivory);
+  color: var(--admin-ink);
+  font-family: var(--admin-font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--admin-mint-dim);
+  outline-offset: 2px;
+}

@@ -1,0 +1,117 @@
+/* ---------- Page Banner (shared across About, Products, Contact) ---------- */
+.page-banner {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: clamp(170px, 20vw, 240px);
+  padding: clamp(48px, 6vw, 76px) 24px;
+  width: 100%;
+  background-color: #79F6C2;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-bottom: 2px solid rgba(5, 10, 60, 0.12);
+  box-shadow: 0 4px 16px rgba(7, 16, 91, 0.08);
+}
+
+.page-banner__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(5, 10, 60, 0.45) 0%,
+    rgba(5, 10, 60, 0.55) 45%,
+    rgba(5, 10, 60, 0.35) 100%
+  );
+  z-index: 1;
+}
+
+/* Decorative stitch lines in subtle navy opacity */
+.page-banner__stitch {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 35vw;
+  max-width: 450px;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.75;
+}
+
+.page-banner__content {
+  position: relative;
+  z-index: 2;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Centered separator dots/lines in navy */
+.page-banner__separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.page-banner__separator span {
+  display: block;
+  width: 24px;
+  height: 2.5px;
+  border-radius: 2px;
+  background: #FFFFFF;
+}
+
+.page-banner__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 3.4vw, 2.6rem);
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0 0 8px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+
+.page-banner__subtitle {
+  font-family: var(--font-body);
+  font-size: clamp(0.88rem, 1.15vw, 1.05rem);
+  color: rgba(255, 255, 255, 0.92);
+  font-style: italic;
+  margin: 0;
+  line-height: 1.5;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .page-banner {
+    min-height: 160px;
+    padding: clamp(40px, 6vw, 64px) 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-banner {
+    min-height: 150px;
+    padding: 36px 16px;
+  }
+  .page-banner__title {
+    font-size: clamp(1.5rem, 6vw, 2.1rem);
+  }
+}
+
+
+
+
+

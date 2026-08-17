@@ -1,0 +1,36 @@
+.contact-cta {
+  background: var(--color-navy);
+  padding: clamp(52px, 6vw, 72px) 0;
+}
+
+.contact-cta__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 36px;
+  flex-wrap: wrap;
+}
+
+.contact-cta h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 2.3vw, 1.95rem);
+  color: var(--color-white);
+  margin: 0 0 8px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.contact-cta p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.98rem;
+  line-height: 1.6;
+  max-width: 72ch;
+}
+
+.contact-cta__buttons {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
