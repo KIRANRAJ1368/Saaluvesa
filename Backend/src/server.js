@@ -9,8 +9,6 @@ import { uploadsDirectory } from "./utils/upload.js";
 import auth from "./routes/auth.js";
 import { publicProducts, adminProducts } from "./routes/products.js";
 import { publicContact, adminContacts } from "./routes/contact.js";
-import settings from "./routes/settings.js";
-import exportsRouter from "./routes/export-documents.js";
 const app = express();
 app.use(cors({ origin: process.env.CLIENT_ORIGIN?.split(",") || true }));
 app.use(express.json({ limit: "2mb" }));
@@ -35,10 +33,6 @@ specification.paths = {
     get: { summary: "List products", security: [{ bearerAuth: [] }] },
     post: { summary: "Create product", security: [{ bearerAuth: [] }] },
   },
-  "/api/admin/export-documents": {
-    get: { summary: "List export documents", security: [{ bearerAuth: [] }] },
-    post: { summary: "Create export document", security: [{ bearerAuth: [] }] },
-  },
 };
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(specification));
 app.use("/api/auth", auth);
@@ -46,8 +40,6 @@ app.use("/api/products", publicProducts);
 app.use("/api/contact", publicContact);
 app.use("/api/admin/products", adminProducts);
 app.use("/api/admin/contact-submissions", adminContacts);
-app.use("/api/admin/site-settings", settings);
-app.use("/api/admin/export-documents", exportsRouter);
 app.use((err, _req, res, _next) => {
   console.error(err);
   if (err.name === "MulterError") {

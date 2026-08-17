@@ -47,7 +47,7 @@ router.post(
       await recalculate(document, tx);
       await tx.commit();
       const result = await ExportDocument.findByPk(document.id, { include });
-      await emailInvoice(result);
+      try { await emailInvoice(result); } catch (m) { console.error("Invoice email failed:", m.message); }
       res.status(201).json(result);
     } catch (e) {
       await tx.rollback();
@@ -123,7 +123,7 @@ router.put("/:id", async (req, res, next) => {
     );
     await tx.commit();
     const result = await ExportDocument.findByPk(document.id, { include });
-    await emailInvoice(result);
+    try { await emailInvoice(result); } catch (m) { console.error("Invoice email failed:", m.message); }
     res.json(result);
   } catch (e) {
     await tx.rollback();
@@ -174,7 +174,7 @@ async function replaceItems(req, res, next, items) {
     );
     await tx.commit();
     const result = await ExportDocument.findByPk(document.id, { include });
-    await emailInvoice(result);
+    try { await emailInvoice(result); } catch (m) { console.error("Invoice email failed:", m.message); }
     return res.json(result);
   } catch (e) {
     await tx.rollback();

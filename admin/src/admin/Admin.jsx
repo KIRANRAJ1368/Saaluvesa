@@ -10,7 +10,7 @@ import {
   useLocation,
   useOutletContext,
 } from "react-router-dom";
-import { api, download } from "../lib/api";
+import { api } from "../lib/api";
 import { Icon } from "./icons";
 import brandLogo from "../../../Frontend/src/assets/logo.jpeg";
 import siteImageCustom from "../../../Frontend/src/assets/product_custom.jpg";
@@ -68,42 +68,10 @@ function validateImageFile(file) {
   });
 }
 
-const fields = [
-  "invoice_no",
-  "shipment_date",
-  "shipment_ref_no",
-  "reason_for_export",
-  "type_of_export",
-  "export_license_no",
-  "import_license_no",
-  "incoterms",
-  "currency_code",
-  "payment_method",
-  "importer_name",
-  "importer_address",
-  "importer_contact",
-  "importer_email",
-  "importer_tax_id",
-  "no_of_packages",
-  "package_description",
-];
-
-const settingsKeys = [
-  "office_name",
-  "office_address",
-  "contact_email",
-  "live_support_number",
-  "gst_number",
-  "iec_number",
-];
-
 const pageNames = {
   "/": "Dashboard",
   "/products": "Products",
   "/contacts": "Contact submissions",
-  "/export-documents": "Export documents",
-  "/bulk-orders": "Bulk orders",
-  "/settings": "Site settings",
 };
 
 /* ------------------------------------------------------------------ */
@@ -125,6 +93,17 @@ const fmtDate = (value) =>
         day: "numeric",
         month: "short",
         year: "numeric",
+      })
+    : "—";
+
+const fmtDateTime = (value) =>
+  value
+    ? new Date(value).toLocaleString(undefined, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       })
     : "—";
 
@@ -405,25 +384,12 @@ function Sidebar() {
         <img src={brandLogo} alt="Saaluvesa" />
         <div>
           <strong>SAALU<span>VESA</span></strong>
-          <small>ADMIN CONSOLE</small>
+          <small>ADMIN</small>
         </div>
       </div>
       <nav className="admin-nav">
-        <p className="admin-nav-label">Workspace</p>
-        {navItems.slice(0, 5).map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            className={({ isActive }) => `admin-nav-item${isActive ? " admin-nav-item--active" : ""}`}
-          >
-            <Icon name={item.icon} size={18} />
-            <span className="admin-nav-item__label">{item.label}</span>
-            <span className="admin-nav-item__arrow"><Icon name="chevron-right" size={14} /></span>
-          </NavLink>
-        ))}
-        <p className="admin-nav-label">System</p>
-        {navItems.slice(5).map((item) => (
+        <p className="admin-nav-label">Main</p>
+        {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
@@ -453,21 +419,17 @@ function Sidebar() {
   );
 }
 
-function Topbar({ onLogout }) {
+function Topbar() {
   const location = useLocation();
-  const { query, setQuery } = useShell();
+
   const bellRef = useRef(null);
-  const profileRef = useRef(null);
   const [bellOpen, setBellOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
   const [notifications, setNotifications] = useState([
     { id: 1, title: "New enquiry received", detail: "Requirements from Import Clothing Co.", time: "12m ago", tone: "mint" },
-    { id: 2, title: "Export document created", detail: "Proforma invoice sent to exporter", time: "2h ago", tone: "navy" },
-    { id: 3, title: "Catalogue updated", detail: "Products synced successfully", time: "Yesterday", tone: "neutral" },
+    { id: 2, title: "Catalogue updated", detail: "Products synced successfully", time: "Yesterday", tone: "neutral" },
   ]);
 
   useClickOutside(bellRef, () => setBellOpen(false));
-  useClickOutside(profileRef, () => setProfileOpen(false));
 
   const pageName = pageNames[location.pathname] || "Admin";
 
@@ -476,21 +438,6 @@ function Topbar({ onLogout }) {
       <div className="admin-topbar__title">
         <p className="admin-topbar__eyebrow">Saaluvesa Enterprises</p>
         <h1>{pageName}</h1>
-      </div>
-
-      <div className="admin-topbar__search">
-        <Icon name="search" size={16} />
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search the current view…"
-          aria-label="Search"
-        />
-        {query && (
-          <button onClick={() => setQuery("")} className="admin-topbar__clear" aria-label="Clear search">
-            <Icon name="x" size={14} />
-          </button>
-        )}
       </div>
 
       <div className="admin-topbar__actions">
@@ -533,31 +480,11 @@ function Topbar({ onLogout }) {
           )}
         </div>
 
-        <div className="admin-dropdown" ref={profileRef}>
-          <button className="admin-profile" onClick={() => setProfileOpen((o) => !o)}>
-            <span className="admin-profile__avatar">SE</span>
-            <span className="admin-profile__meta">
-              <strong>Administrator</strong>
-              <small>Management portal</small>
-            </span>
-            <Icon name="chevron-down" size={15} />
-          </button>
-          {profileOpen && (
-            <div className="admin-dropdown__panel admin-dropdown__panel--profile">
-              <div className="admin-dropdown__user">
-                <Avatar name="Saaluvesa Administrator" size={40} />
-                <div>
-                  <strong>Administrator</strong>
-                  <small>admin@saaluvesa.com</small>
-                </div>
-              </div>
-              <div className="admin-dropdown__divider" />
-              <button className="admin-dropdown__item" onClick={onLogout}>
-                <Icon name="logout" size={16} />
-                Log out
-              </button>
-            </div>
-          )}
+        <div className="admin-profile">
+          <span className="admin-profile__avatar">A</span>
+          <span className="admin-profile__meta">
+            <strong>Admin</strong>
+          </span>
         </div>
       </div>
     </header>
@@ -594,9 +521,6 @@ function Shell() {
     { to: "/", label: "Overview", icon: "dashboard", end: true },
     { to: "/products", label: "Products", icon: "package" },
     { to: "/contacts", label: "Contact submissions", icon: "inbox" },
-    { to: "/export-documents", label: "Export documents", icon: "file-text" },
-    { to: "/bulk-orders", label: "Bulk orders", icon: "clipboard" },
-    { to: "/settings", label: "Site settings", icon: "settings" },
   ];
 
   return (
@@ -690,10 +614,9 @@ function Dashboard() {
     Promise.all([
       api("/admin/products"),
       api("/admin/contact-submissions"),
-      api("/admin/export-documents"),
     ])
-      .then(([products, submissions, documents]) => alive && setState({ products, submissions, documents }))
-      .catch(() => alive && setState({ products: [], submissions: [], documents: [] }));
+      .then(([products, submissions]) => alive && setState({ products, submissions }))
+      .catch(() => alive && setState({ products: [], submissions: [] }));
     return () => {
       alive = false;
     };
@@ -720,28 +643,11 @@ function Dashboard() {
     );
   }
 
-  const { products, submissions, documents } = state;
-  const pending = submissions.filter((s) => s.status === "New").length;
-  const responded = submissions.filter((s) => s.status === "Responded").length;
-  const openDocs = documents.filter((d) => d.status !== "Closed").length;
-
+  const { products, submissions } = state;
   const stats = [
     { label: "Products", value: products.length, icon: "package", tone: "mint", sub: "In your catalogue" },
-    { label: "Pending enquiries", value: pending, icon: "inbox", tone: "navy", sub: "Awaiting response" },
-    { label: "Open documents", value: openDocs, icon: "file-text", tone: "amber", sub: "Export workflow" },
     { label: "Total submissions", value: submissions.length, icon: "users", tone: "violet", sub: "All-time enquiries" },
   ];
-
-  const last7 = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    return { key: d.toDateString(), label: d.toLocaleDateString(undefined, { weekday: "short" }), count: 0 };
-  });
-  submissions.forEach((s) => {
-    const key = new Date(s.createdAt).toDateString();
-    const slot = last7.find((x) => x.key === key);
-    if (slot) slot.count += 1;
-  });
 
   const recent = [...submissions]
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -754,7 +660,7 @@ function Dashboard() {
           <p className="admin-eyebrow">Overview</p>
           <h2>Dashboard</h2>
         </div>
-        <p>Live snapshot of your catalogue, enquiries, and export workflow.</p>
+        <p>Live snapshot of your catalogue and enquiries.</p>
       </div>
 
       <div className="admin-grid admin-grid--stats">
@@ -768,50 +674,6 @@ function Dashboard() {
             <p className="admin-stat__sub">{s.sub}</p>
           </div>
         ))}
-      </div>
-
-      <div className="admin-grid admin-grid--dash">
-        <section className="admin-card">
-          <div className="admin-card__head">
-            <div>
-              <h3>Enquiry activity</h3>
-              <p>Contact submissions over the last 7 days</p>
-            </div>
-            <span className="admin-chip">
-              <Icon name="trending-up" size={14} />
-              {submissions.length} total
-            </span>
-          </div>
-          <Bars data={last7.map((d) => ({ label: d.label, value: d.count }))} />
-        </section>
-
-        <section className="admin-card">
-          <div className="admin-card__head">
-            <div>
-              <h3>Enquiry status</h3>
-              <p>New vs. responded submissions</p>
-            </div>
-          </div>
-          <div className="admin-donut-wrap">
-            <Donut
-              parts={[
-                { label: "New", value: pending, color: "#3fcf9a" },
-                { label: "Responded", value: responded, color: "#07105b" },
-              ]}
-              centerLabel="Current pipeline"
-            />
-            <div className="admin-chart-legend">
-              <div>
-                <span className="admin-legend-dot" style={{ background: "#3fcf9a" }} />
-                <p><b>New</b><small>{pending} awaiting response</small></p>
-              </div>
-              <div>
-                <span className="admin-legend-dot" style={{ background: "#07105b" }} />
-                <p><b>Responded</b><small>{responded} handled</small></p>
-              </div>
-            </div>
-          </div>
-        </section>
       </div>
 
       <section className="admin-card">
@@ -851,6 +713,337 @@ function Dashboard() {
 }
 
 /* ------------------------------------------------------------------ */
+/* product detail drawer                                              */
+/* ------------------------------------------------------------------ */
+
+function ProductDetailDrawer({ product, onClose, onEdit, pushToast }) {
+  const [copiedKey, setCopiedKey] = useState(null);
+
+  const copyText = (text, key, label) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    if (pushToast) pushToast("success", `Copied ${label} to clipboard`);
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
+
+  if (!product) return null;
+
+  return (
+    <div className="admin-detail-view">
+      {/* 1. Hero Image / Media Preview */}
+      <div className="admin-detail-media">
+        {product.image ? (
+          <div className="admin-detail-image-wrap">
+            <img src={product.image} alt={product.name} className="admin-detail-image" />
+            <div className="admin-detail-image-overlay">
+              <Badge tone={product.is_active ? "mint" : "gray"}>
+                {product.is_active ? "Active" : "Inactive"}
+              </Badge>
+            </div>
+          </div>
+        ) : (
+          <div className="admin-detail-image-placeholder">
+            <Icon name="image" size={32} />
+            <p>No product image uploaded</p>
+            <Badge tone={product.is_active ? "mint" : "gray"}>
+              {product.is_active ? "Active" : "Inactive"}
+            </Badge>
+          </div>
+        )}
+      </div>
+
+      {/* 2. Header Card */}
+      <div className="admin-detail-header-card">
+        <div className="admin-detail-header-top">
+          <span className="admin-detail-eyebrow">Catalogue item #{product.display_order ?? 0}</span>
+          <Badge tone={product.is_active ? "mint" : "gray"}>
+            {product.is_active ? "Published" : "Draft / Inactive"}
+          </Badge>
+        </div>
+        <h3 className="admin-detail-product-title">{product.name}</h3>
+        {product.slug && (
+          <div className="admin-detail-slug-chip">
+            <span className="admin-detail-slug-label">Slug:</span>
+            <code>/{product.slug}</code>
+            <button
+              type="button"
+              className="admin-detail-inline-copy"
+              title="Copy slug"
+              onClick={() => copyText(product.slug, "slug", "slug")}
+            >
+              <Icon name={copiedKey === "slug" ? "check" : "copy"} size={13} />
+              <span>{copiedKey === "slug" ? "Copied" : "Copy"}</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* 3. Description Section */}
+      <div className="admin-detail-section">
+        <div className="admin-detail-section-title">
+          <Icon name="file-text" size={15} />
+          <h4>Description & Specifications</h4>
+        </div>
+        <div className="admin-detail-description-card">
+          <p>{product.description || "No description provided for this product."}</p>
+        </div>
+      </div>
+
+      {/* 4. Link & Storefront Section */}
+      <div className="admin-detail-section">
+        <div className="admin-detail-section-title">
+          <Icon name="globe" size={15} />
+          <h4>Storefront & External Link</h4>
+        </div>
+        {product.website_link ? (
+          <a
+            href={product.website_link}
+            target="_blank"
+            rel="noreferrer"
+            className="admin-detail-link-card"
+          >
+            <div className="admin-detail-link-card__icon">
+              <Icon name="link" size={18} />
+            </div>
+            <div className="admin-detail-link-card__text">
+              <strong>Visit Webpage</strong>
+              <small>{product.website_link}</small>
+            </div>
+            <div className="admin-detail-link-card__arrow">
+              <Icon name="external-link" size={16} />
+            </div>
+          </a>
+        ) : (
+          <div className="admin-detail-empty-card">
+            <Icon name="link" size={15} />
+            <span>No external webpage link attached to this product.</span>
+          </div>
+        )}
+      </div>
+
+      {/* 5. Catalogue & System Metadata Grid */}
+      <div className="admin-detail-section">
+        <div className="admin-detail-section-title">
+          <Icon name="layers" size={15} />
+          <h4>Catalogue Metadata</h4>
+        </div>
+        <div className="admin-detail-meta-grid">
+          <div className="admin-detail-meta-tile">
+            <span className="admin-detail-meta-tile__label">Display Position</span>
+            <strong className="admin-detail-meta-tile__value">#{product.display_order ?? 0}</strong>
+            <small>Sorting order on customer catalogue</small>
+          </div>
+          <div className="admin-detail-meta-tile">
+            <span className="admin-detail-meta-tile__label">Visibility Status</span>
+            <div className="admin-detail-meta-tile__value" style={{ marginTop: 2 }}>
+              <Badge tone={product.is_active ? "mint" : "gray"}>
+                {product.is_active ? "Active" : "Inactive"}
+              </Badge>
+            </div>
+            <small>{product.is_active ? "Visible on customer frontend" : "Hidden from customers"}</small>
+          </div>
+        </div>
+      </div>
+
+      {/* 6. System Audit & Timestamps */}
+      <div className="admin-detail-section">
+        <div className="admin-detail-section-title">
+          <Icon name="clock" size={15} />
+          <h4>Audit Trail & Timestamps</h4>
+        </div>
+        <div className="admin-detail-audit-box">
+          <div className="admin-detail-audit-item">
+            <Icon name="calendar" size={15} />
+            <div>
+              <span>Created at</span>
+              <strong>{fmtDateTime(product.createdAt)}</strong>
+            </div>
+          </div>
+          <div className="admin-detail-audit-divider" />
+          <div className="admin-detail-audit-item">
+            <Icon name="refresh" size={15} />
+            <div>
+              <span>Last updated</span>
+              <strong>{fmtDateTime(product.updatedAt)}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 7. Action Footer */}
+      <div className="admin-detail-actions">
+        <button
+          type="button"
+          className="admin-btn admin-btn--ghost"
+          onClick={onClose}
+        >
+          Close
+        </button>
+        <button
+          type="button"
+          className="admin-btn admin-btn--primary"
+          onClick={() => {
+            onClose();
+            onEdit(product);
+          }}
+        >
+          <Icon name="pencil" size={16} />
+          Edit this product
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* enquiry detail drawer                                              */
+/* ------------------------------------------------------------------ */
+
+function EnquiryDetailDrawer({
+  selected,
+  onClose,
+  onRespond,
+  onDelete,
+  updating,
+  busyId,
+  pushToast,
+}) {
+  const [copiedKey, setCopiedKey] = useState(null);
+
+  const copyText = (text, key, label) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    if (pushToast) pushToast("success", `Copied ${label} to clipboard`);
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
+
+  if (!selected) return null;
+
+  return (
+    <div className="admin-detail-view">
+      {/* Customer Hero Card */}
+      <div className="admin-detail-header-card">
+        <div className="admin-detail-header-top">
+          <span className="admin-detail-eyebrow">Customer Contact</span>
+          <Badge tone={statusTone(selected.status)}>{selected.status}</Badge>
+        </div>
+        <div className="admin-detail-customer-header">
+          <Avatar name={selected.name} size={46} />
+          <div className="admin-detail-customer-info">
+            <h3 className="admin-detail-product-title">{selected.name}</h3>
+            <div className="admin-detail-customer-email-row">
+              <a href={`mailto:${selected.email}`} className="admin-detail-email-link">
+                <Icon name="mail" size={14} />
+                {selected.email}
+              </a>
+              <button
+                type="button"
+                className="admin-detail-inline-copy"
+                title="Copy email"
+                onClick={() => copyText(selected.email, "email", "email")}
+              >
+                <Icon name={copiedKey === "email" ? "check" : "copy"} size={13} />
+                <span>{copiedKey === "email" ? "Copied" : "Copy"}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Requirement Details */}
+      <div className="admin-detail-section">
+        <div className="admin-detail-section-title">
+          <Icon name="file-text" size={15} />
+          <h4>Requirement Details</h4>
+        </div>
+        <div className="admin-detail-description-card">
+          <p>{selected.requirement_details || "No specific requirement details provided."}</p>
+        </div>
+      </div>
+
+      {/* Linked Product & Location Information */}
+      <div className="admin-detail-section">
+        <div className="admin-detail-section-title">
+          <Icon name="package" size={15} />
+          <h4>Linked Product & Location</h4>
+        </div>
+        <div className="admin-detail-meta-grid">
+          <div className="admin-detail-meta-tile">
+            <span className="admin-detail-meta-tile__label">Target Product</span>
+            <strong className="admin-detail-meta-tile__value" style={{ fontSize: "0.95rem" }}>
+              {selected.Product?.name || "General Enquiry"}
+            </strong>
+            <small>{selected.Product ? "Attached catalogue product" : "General customer enquiry"}</small>
+          </div>
+          <div className="admin-detail-meta-tile">
+            <span className="admin-detail-meta-tile__label">Location / Address</span>
+            <p className="admin-detail-meta-tile__value" style={{ fontSize: "0.85rem", fontWeight: 600 }}>
+              {selected.address || "—"}
+              {selected.postal_code ? ` (${selected.postal_code})` : ""}
+            </p>
+            <small>Delivery or business location</small>
+          </div>
+        </div>
+      </div>
+
+      {/* Timeline */}
+      <div className="admin-detail-section">
+        <div className="admin-detail-section-title">
+          <Icon name="clock" size={15} />
+          <h4>Submission Timestamp</h4>
+        </div>
+        <div className="admin-detail-audit-box">
+          <div className="admin-detail-audit-item">
+            <Icon name="calendar" size={15} />
+            <div>
+              <span>Submitted on</span>
+              <strong>{fmtDateTime(selected.createdAt)}</strong>
+            </div>
+          </div>
+          <div className="admin-detail-audit-divider" />
+          <div className="admin-detail-audit-item">
+            <Icon name="refresh" size={15} />
+            <div>
+              <span>Status</span>
+              <strong>{selected.status}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="admin-detail-actions">
+        {selected.status === "New" && (
+          <button
+            type="button"
+            className="admin-btn admin-btn--primary"
+            onClick={() => onRespond(selected)}
+            disabled={updating === selected.id}
+          >
+            {updating === selected.id ? <Spinner size={16} /> : <Icon name="check" size={16} />}
+            Mark as responded
+          </button>
+        )}
+        <button
+          type="button"
+          className="admin-btn admin-btn--danger"
+          onClick={() => onDelete(selected)}
+          disabled={busyId === selected.id}
+        >
+          {busyId === selected.id ? <Spinner size={16} /> : <Icon name="trash" size={16} />}
+          Delete enquiry
+        </button>
+        <button type="button" className="admin-btn admin-btn--ghost" onClick={onClose}>
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* products                                                            */
 /* ------------------------------------------------------------------ */
 
@@ -859,6 +1052,7 @@ function ProductsAdmin() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
+  const [viewing, setViewing] = useState(null);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState(null);
@@ -940,13 +1134,20 @@ function ProductsAdmin() {
     const name = (form.get("name") || "").trim();
     const description = (form.get("description") || "").trim();
     const website_link = (form.get("website_link") || "").trim();
+    const display_order = (form.get("display_order") || "0").trim();
+    const is_active = form.get("is_active") === "true";
 
     if (!name) return setFormError("Product name is required.");
     if (!description) return setFormError("Description is required.");
+    if (!/^\d+$/.test(display_order)) {
+      return setFormError("Display order must be a whole number of zero or greater.");
+    }
 
     const payload = new FormData();
     payload.append("name", name);
     payload.append("description", description);
+    payload.append("display_order", display_order);
+    payload.append("is_active", String(is_active));
     if (website_link) payload.append("website_link", website_link);
 
     if (imageFile) {
@@ -1039,13 +1240,15 @@ function ProductsAdmin() {
                 <tr>
                   <th>Product</th>
                   <th>Description</th>
+                  <th>Display order</th>
+                  <th>Status</th>
                   <th>Website link</th>
                   <th className="th-actions">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((p) => (
-                  <tr key={p.id}>
+                  <tr key={p.id} className="admin-row" onClick={() => setViewing(p)}>
                     <td>
                       <div className="cell-name">
                         {p.image ? (
@@ -1057,6 +1260,12 @@ function ProductsAdmin() {
                       </div>
                     </td>
                     <td className="cell-clamp" title={p.description}>{p.description}</td>
+                    <td>{p.display_order ?? 0}</td>
+                    <td>
+                      <Badge tone={p.is_active ? "mint" : "gray"}>
+                        {p.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    </td>
                     <td>
                       {p.website_link ? (
                         <a
@@ -1077,15 +1286,31 @@ function ProductsAdmin() {
                       <div className="row-actions">
                         <button
                           className="admin-icon-btn admin-icon-btn--soft"
+                          title="View"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setViewing(p);
+                          }}
+                        >
+                          <Icon name="eye" size={16} />
+                        </button>
+                        <button
+                          className="admin-icon-btn admin-icon-btn--soft"
                           title="Edit"
-                          onClick={() => openEdit(p)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEdit(p);
+                          }}
                         >
                           <Icon name="pencil" size={16} />
                         </button>
                         <button
                           className="admin-icon-btn admin-icon-btn--danger"
                           title="Delete"
-                          onClick={() => remove(p)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            remove(p);
+                          }}
                           disabled={busyId === p.id}
                         >
                           {busyId === p.id ? <Spinner size={15} /> : <Icon name="trash" size={16} />}
@@ -1125,36 +1350,78 @@ function ProductsAdmin() {
         sub={editing ? `Updating “${editing.name}”` : "Create a new catalogue entry"}
         wide
       >
-        <form onSubmit={save} className="admin-form">
-          <div className="admin-field">
-            <label htmlFor="p-name">Product name</label>
-            <input
-              id="p-name"
-              name="name"
-              placeholder="e.g. Custom Printed T-Shirts"
-              defaultValue={editing?.name}
-              required
-              autoFocus
-              onChange={() => formError && setFormError("")}
-            />
-          </div>
-          <div className="admin-field">
-            <label htmlFor="p-desc">Description</label>
-            <textarea
-              id="p-desc"
-              name="description"
-              placeholder="Short description shown on the site"
-              defaultValue={editing?.description}
-              required
-              rows={3}
-              onChange={() => formError && setFormError("")}
-            />
-          </div>
+        <form onSubmit={save} className="admin-form admin-form--product">
+          {/* Section: Basic Information */}
+          <fieldset className="admin-form-section">
+            <legend className="admin-form-section__title">
+              <Icon name="pencil" size={15} />
+              Basic information
+            </legend>
 
-          <div className="admin-field admin-field--span2">
-            <label>
-              Product image <span>required · JPG / PNG / WebP · 4:3 · min 800×600</span>
-            </label>
+            <div className="admin-form-grid">
+              <div className="admin-field admin-field--full">
+                <label htmlFor="p-name">Product name <span>required</span></label>
+                <input
+                  id="p-name"
+                  name="name"
+                  placeholder="e.g. Custom Printed T-Shirts"
+                  defaultValue={editing?.name}
+                  required
+                  autoFocus
+                  onChange={() => formError && setFormError("")}
+                />
+              </div>
+
+              <div className="admin-field admin-field--full">
+                <label htmlFor="p-desc">Description <span>required</span></label>
+                <textarea
+                  id="p-desc"
+                  name="description"
+                  placeholder="Describe the product — materials, use cases, finish, available sizes…"
+                  defaultValue={editing?.description}
+                  required
+                  rows={4}
+                  onChange={() => formError && setFormError("")}
+                />
+              </div>
+
+              <div className="admin-field">
+                <label htmlFor="p-display-order">Display order</label>
+                <input
+                  id="p-display-order"
+                  name="display_order"
+                  type="number"
+                  min="0"
+                  step="1"
+                  defaultValue={editing?.display_order ?? 0}
+                  required
+                />
+                <small>Lower numbers appear first on the frontend.</small>
+              </div>
+
+              <div className="admin-field">
+                <label htmlFor="p-active">Visibility</label>
+                <label className="admin-check-row" htmlFor="p-active">
+                  <input
+                    id="p-active"
+                    name="is_active"
+                    type="checkbox"
+                    value="true"
+                    defaultChecked={editing?.is_active ?? true}
+                  />
+                  <span>Active — show this product on the frontend</span>
+                </label>
+              </div>
+            </div>
+          </fieldset>
+
+          {/* Section: Product Image */}
+          <fieldset className="admin-form-section">
+            <legend className="admin-form-section__title">
+              <Icon name="image" size={15} />
+              Product image
+            </legend>
+
             <div className="admin-image-picker">
               <div className={`admin-image-picker__preview${imagePreview || currentImage ? "" : " is-empty"}`}>
                 {imagePreview ? (
@@ -1166,8 +1433,9 @@ function ProductsAdmin() {
                   </>
                 ) : (
                   <div className="admin-image-picker__placeholder">
-                    <Icon name="image" size={28} />
+                    <Icon name="image" size={32} />
                     <span>No image selected</span>
+                    <small>Upload to see a preview here</small>
                   </div>
                 )}
               </div>
@@ -1179,31 +1447,21 @@ function ProductsAdmin() {
                     accept="image/jpeg,image/png,image/webp"
                     onChange={handleImageFile}
                   />
-                  <Icon name="upload" size={18} />
+                  <div className="admin-upload-box__icon">
+                    <Icon name="upload" size={20} />
+                  </div>
                   <span>
-                    <strong>{imageFile ? "Image selected — change it" : "Upload new image"}</strong>
-                    <small>JPG, PNG or WebP · 4:3 · at least 800×600 px</small>
+                    <strong>{imageFile ? "Change image" : "Upload product image"}</strong>
+                    <small>JPG, PNG or WebP — 4:3 ratio — min 800 × 600 px</small>
                   </span>
                 </label>
 
-                <div className="admin-image-picker__site">
-                  <p>Or use an existing website image:</p>
-                  <div className="admin-image-picker__sites">
-                    {SITE_IMAGES.map((opt) => (
-                      <button
-                        type="button"
-                        key={opt.file}
-                        className={`admin-site-thumb${siteChoice?.file === opt.file ? " is-selected" : ""}`}
-                        onClick={() => handleSiteChoice(opt)}
-                        title={opt.label}
-                        aria-label={`Use ${opt.label} image`}
-                      >
-                        <img src={opt.src} alt={opt.label} />
-                        <span>{opt.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                {imageFile && (
+                  <p className="admin-image-meta">
+                    <Icon name="check" size={14} />
+                    <span>{imageFile.name} ({(imageFile.size / 1024).toFixed(0)} KB)</span>
+                  </p>
+                )}
 
                 {imageError && (
                   <p className="admin-field-error" role="alert">
@@ -1213,18 +1471,28 @@ function ProductsAdmin() {
                 )}
               </div>
             </div>
-          </div>
+          </fieldset>
 
-          <div className="admin-field">
-            <label htmlFor="p-link">Website link <span>optional</span></label>
-            <input
-              id="p-link"
-              name="website_link"
-              type="url"
-              placeholder="https://…"
-              defaultValue={editing?.website_link}
-            />
-          </div>
+          {/* Section: Additional Details */}
+          <fieldset className="admin-form-section">
+            <legend className="admin-form-section__title">
+              <Icon name="external-link" size={15} />
+              Additional details
+            </legend>
+
+            <div className="admin-form-grid">
+              <div className="admin-field admin-field--full">
+                <label htmlFor="p-link">Website link <span>optional</span></label>
+                <input
+                  id="p-link"
+                  name="website_link"
+                  type="url"
+                  placeholder="https://example.com/product-page"
+                  defaultValue={editing?.website_link}
+                />
+              </div>
+            </div>
+          </fieldset>
 
           {formError && (
             <p className="admin-field-error admin-form__error" role="alert">
@@ -1233,7 +1501,7 @@ function ProductsAdmin() {
             </p>
           )}
 
-          <div className="admin-form__actions">
+          <div className="admin-form__actions admin-form__actions--sticky">
             <button type="button" className="admin-btn admin-btn--ghost" onClick={() => setOpen(false)}>
               Cancel
             </button>
@@ -1244,6 +1512,21 @@ function ProductsAdmin() {
           </div>
         </form>
       </Modal>
+
+      <Modal
+        open={!!viewing}
+        onClose={() => setViewing(null)}
+        title="Product details"
+        sub={viewing?.name || ""}
+        drawer
+      >
+        <ProductDetailDrawer
+          product={viewing}
+          onClose={() => setViewing(null)}
+          onEdit={(prod) => openEdit(prod)}
+          pushToast={pushToast}
+        />
+      </Modal>
     </div>
   );
 }
@@ -1253,7 +1536,7 @@ function ProductsAdmin() {
 /* ------------------------------------------------------------------ */
 
 function Contacts() {
-  const { pushToast, query } = useOutletContext();
+  const { pushToast, confirm, query } = useOutletContext();
   const [rows, setRows] = useState([]);
   const [status, setStatus] = useState("");
   const [selected, setSelected] = useState(null);
@@ -1291,6 +1574,28 @@ function Contacts() {
       pushToast("error", err.message || "Could not update enquiry");
     } finally {
       setUpdating(null);
+    }
+  };
+
+  const [busyId, setBusyId] = useState(null);
+
+  const removeContact = async (row) => {
+    const ok = await confirm({
+      title: `Delete enquiry from "${row.name}"?`,
+      message: "This will permanently remove this contact submission. This action cannot be undone.",
+      confirmLabel: "Delete enquiry",
+    });
+    if (!ok) return;
+    setBusyId(row.id);
+    try {
+      await api(`/admin/contact-submissions/${row.id}`, { method: "DELETE" });
+      pushToast("success", "Enquiry deleted");
+      setSelected((prev) => (prev && prev.id === row.id ? null : prev));
+      load();
+    } catch (err) {
+      pushToast("error", err.message || "Could not delete enquiry");
+    } finally {
+      setBusyId(null);
     }
   };
 
@@ -1351,19 +1656,36 @@ function Contacts() {
                     <td><Badge tone={statusTone(row.status)}>{row.status}</Badge></td>
                     <td>{fmtDate(row.createdAt)}</td>
                     <td>
-                      {row.status === "New" && (
+                      <div className="row-actions">
                         <button
-                          className="admin-btn admin-btn--soft admin-btn--sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            respond(row);
-                          }}
-                          disabled={updating === row.id}
+                          className="admin-icon-btn admin-icon-btn--soft"
+                          title="View"
+                          onClick={(e) => { e.stopPropagation(); setSelected(row); }}
                         >
-                          {updating === row.id ? <Spinner size={14} /> : <Icon name="check" size={15} />}
-                          Mark responded
+                          <Icon name="eye" size={16} />
                         </button>
-                      )}
+                        <button
+                          className="admin-icon-btn admin-icon-btn--danger"
+                          title="Delete"
+                          onClick={(e) => { e.stopPropagation(); removeContact(row); }}
+                          disabled={busyId === row.id}
+                        >
+                          {busyId === row.id ? <Spinner size={15} /> : <Icon name="trash" size={16} />}
+                        </button>
+                        {row.status === "New" && (
+                          <button
+                            className="admin-btn admin-btn--soft admin-btn--sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              respond(row);
+                            }}
+                            disabled={updating === row.id}
+                          >
+                            {updating === row.id ? <Spinner size={14} /> : <Icon name="check" size={15} />}
+                            Mark responded
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1388,330 +1710,16 @@ function Contacts() {
         sub={selected ? `${selected.name} · ${fmtDate(selected.createdAt)}` : ""}
         drawer
       >
-        {selected && (
-          <div className="admin-kv">
-            <div className="admin-kv__row"><span>Email</span><a href={`mailto:${selected.email}`}>{selected.email}</a></div>
-            <div className="admin-kv__row"><span>Address</span><p>{selected.address || "—"}{selected.postal_code ? ` · ${selected.postal_code}` : ""}</p></div>
-            <div className="admin-kv__row"><span>Linked product</span><p>{selected.Product?.name || "General enquiry"}</p></div>
-            <div className="admin-kv__row"><span>Status</span><Badge tone={statusTone(selected.status)}>{selected.status}</Badge></div>
-            <div className="admin-kv__row"><span>Requirement</span><p className="admin-kv__block">{selected.requirement_details || "—"}</p></div>
-            <div className="admin-form__actions">
-              {selected.status === "New" && (
-                <button
-                  className="admin-btn admin-btn--primary"
-                  onClick={() => respond(selected)}
-                  disabled={updating === selected.id}
-                >
-                  {updating === selected.id ? <Spinner size={16} /> : <Icon name="check" size={16} />}
-                  Mark as responded
-                </button>
-              )}
-              <button className="admin-btn admin-btn--ghost" onClick={() => setSelected(null)}>Close</button>
-            </div>
-          </div>
-        )}
+        <EnquiryDetailDrawer
+          selected={selected}
+          onClose={() => setSelected(null)}
+          onRespond={(item) => respond(item)}
+          onDelete={(item) => removeContact(item)}
+          updating={updating}
+          busyId={busyId}
+          pushToast={pushToast}
+        />
       </Modal>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* export documents                                                    */
-/* ------------------------------------------------------------------ */
-
-function ExportDocuments() {
-  const { pushToast, query } = useOutletContext();
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [downloading, setDownloading] = useState(null);
-
-  const load = () => {
-    setLoading(true);
-    api("/admin/export-documents")
-      .then(setRows)
-      .catch(() => setRows([]))
-      .finally(() => setLoading(false));
-  };
-  useEffect(load, []);
-
-  const filtered = rows.filter((row) =>
-    [row.invoice_no, row.importer_name, row.currency_code, String(row.total_goods_value || "")]
-      .join(" ")
-      .toLowerCase()
-      .includes(query.toLowerCase()),
-  );
-
-  const save = async (e) => {
-    e.preventDefault();
-    const values = Object.fromEntries(new FormData(e.currentTarget));
-    const items = (values.bulk || "")
-      .split(/\r?\n/)
-      .filter(Boolean)
-      .map((r) => {
-        const [product_name, qty, unit_value] = r.split(/\t|,/);
-        return { product_name, qty, unit_value, uom: "PCS" };
-      });
-    delete values.bulk;
-    setSaving(true);
-    try {
-      await api("/admin/export-documents", {
-        method: "POST",
-        body: JSON.stringify({ ...values, items }),
-      });
-      pushToast("success", "Export document created and invoice sent");
-      setOpen(false);
-      load();
-    } catch (err) {
-      pushToast("error", err.message || "Could not create export document");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const downloadPdf = async (row) => {
-    setDownloading(row.id);
-    try {
-      await download(`/admin/export-documents/${row.id}/pdf`, `proforma-invoice-${row.id}.pdf`);
-      pushToast("success", `Downloaded proforma invoice ${row.invoice_no}`);
-    } catch (err) {
-      pushToast("error", err.message || "Download failed");
-    } finally {
-      setDownloading(null);
-    }
-  };
-
-  return (
-    <div className="admin-page">
-      <div className="admin-page-heading">
-        <div>
-          <p className="admin-eyebrow">Operations</p>
-          <h2>Export documents</h2>
-        </div>
-        <p>Create and manage proforma invoices for your shipments.</p>
-      </div>
-
-      <div className="admin-toolbar">
-        <span className="admin-toolbar__count">
-          {filtered.length} {filtered.length === 1 ? "document" : "documents"}
-        </span>
-        <button className="admin-btn admin-btn--primary" onClick={() => setOpen(true)}>
-          <Icon name="plus" size={17} />
-          New document
-        </button>
-      </div>
-
-      {loading ? (
-        <TableSkeleton />
-      ) : filtered.length ? (
-        <div className="admin-card admin-card--table">
-          <div className="admin-table-wrap">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Invoice</th>
-                  <th>Importer</th>
-                  <th>Total</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th className="th-actions">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((row) => (
-                  <tr key={row.id}>
-                    <td><strong className="cell-invoice">{row.invoice_no}</strong></td>
-                    <td>{row.importer_name}</td>
-                    <td className="cell-mono">
-                      {row.currency_code} {Number(row.total_goods_value || 0).toLocaleString()}
-                    </td>
-                    <td><Badge tone={statusTone(row.status)}>{row.status}</Badge></td>
-                    <td>{fmtDate(row.createdAt)}</td>
-                    <td>
-                      <div className="row-actions">
-                        <button
-                          className="admin-icon-btn admin-icon-btn--soft"
-                          title="Download PDF"
-                          onClick={() => downloadPdf(row)}
-                          disabled={downloading === row.id}
-                        >
-                          {downloading === row.id ? <Spinner size={15} /> : <Icon name="download" size={16} />}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : query ? (
-        <div className="admin-card">
-          <EmptyState icon="search" title={`No documents for “${query}”`} hint="Try a different search term." />
-        </div>
-      ) : (
-        <div className="admin-card">
-          <EmptyState
-            icon="file-text"
-            title="No export documents yet"
-            hint="Create your first proforma invoice to kick off the export workflow."
-            action={
-              <button className="admin-btn admin-btn--primary" onClick={() => setOpen(true)}>
-                <Icon name="plus" size={17} />
-                New document
-              </button>
-            }
-          />
-        </div>
-      )}
-
-      <Modal
-        open={open}
-        onClose={() => setOpen(false)}
-        title="New export document"
-        sub="Create a proforma invoice and send it to the importer"
-        wide
-      >
-        <form onSubmit={save} className="admin-form admin-form--grid">
-          {fields.map((f) => (
-            <div className="admin-field" key={f}>
-              <label htmlFor={`doc-${f}`}>{f.replaceAll("_", " ")}</label>
-              <input
-                id={`doc-${f}`}
-                name={f}
-                type={f === "shipment_date" ? "date" : "text"}
-                placeholder={f === "shipment_date" ? "Select date" : `e.g. ${f.replaceAll("_", " ")}`}
-                required={["invoice_no", "importer_name"].includes(f)}
-              />
-            </div>
-          ))}
-          <div className="admin-field admin-field--span2">
-            <label htmlFor="doc-bulk">Bulk items <span>product name, qty, unit value — one per line</span></label>
-            <textarea
-              id="doc-bulk"
-              name="bulk"
-              rows={5}
-              placeholder={"Custom T-Shirts\t200\t4.5\nPolos\t150\t6.25"}
-            />
-          </div>
-          <div className="admin-form__actions admin-field--span2">
-            <button type="button" className="admin-btn admin-btn--ghost" onClick={() => setOpen(false)}>
-              Cancel
-            </button>
-            <button type="submit" className="admin-btn admin-btn--primary" disabled={saving}>
-              {saving ? <Spinner size={16} /> : <Icon name="file-text" size={16} />}
-              Save and send invoice
-            </button>
-          </div>
-        </form>
-      </Modal>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* bulk orders + settings                                              */
-/* ------------------------------------------------------------------ */
-
-function BulkOrders() {
-  return (
-    <div className="admin-page">
-      <div className="admin-page-heading">
-        <div>
-          <p className="admin-eyebrow">Orders</p>
-          <h2>Bulk orders</h2>
-        </div>
-      </div>
-      <div className="admin-card admin-card--info">
-        <div className="admin-card__head">
-          <div className="admin-info__icon"><Icon name="clipboard" size={22} /></div>
-          <div>
-            <h3>Planned module</h3>
-            <p className="admin-note">
-              Bulk Orders is intentionally held pending its missing data schema. It needs fields for the
-              customer, upload ownership, catalogue/custom-design selection, and the source price relation
-              before a safe implementation is possible. Its price must be read through from that linked
-              record, never copied or entered beside an image.
-            </p>
-          </div>
-        </div>
-        <div className="admin-status-dot"><span /> Not yet available</div>
-      </div>
-    </div>
-  );
-}
-
-function Settings() {
-  const { pushToast } = useOutletContext();
-  const [settings, setSettings] = useState(null);
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    api("/admin/site-settings")
-      .then(setSettings)
-      .catch(() => setSettings({}));
-  }, []);
-
-  const save = async (e) => {
-    e.preventDefault();
-    const values = Object.fromEntries(new FormData(e.currentTarget));
-    setSaving(true);
-    try {
-      setSettings(await api("/admin/site-settings", { method: "PUT", body: JSON.stringify(values) }));
-      pushToast("success", "Site settings saved");
-    } catch (err) {
-      pushToast("error", err.message || "Could not save settings");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="admin-page">
-      <div className="admin-page-heading">
-        <div>
-          <p className="admin-eyebrow">Configuration</p>
-          <h2>Site settings</h2>
-        </div>
-        <p>Keep your public contact and business information current.</p>
-      </div>
-
-      <div className="admin-card">
-        <div className="admin-card__head">
-          <div>
-            <h3>Business information</h3>
-            <p>Shown across your public website.</p>
-          </div>
-        </div>
-        {settings === null ? (
-          <div className="admin-skeleton-grid">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div className="skeleton skeleton--line" key={i} />
-            ))}
-          </div>
-        ) : (
-          <form onSubmit={save} className="admin-form admin-form--grid">
-            {settingsKeys.map((key) => (
-              <div className="admin-field" key={key}>
-                <label htmlFor={`set-${key}`}>{key.replaceAll("_", " ")}</label>
-                <input
-                  id={`set-${key}`}
-                  name={key}
-                  defaultValue={settings[key] || ""}
-                  placeholder={key.replaceAll("_", " ")}
-                />
-              </div>
-            ))}
-            <div className="admin-form__actions admin-field--span2">
-              <button type="submit" className="admin-btn admin-btn--primary" disabled={saving}>
-                {saving ? <Spinner size={16} /> : <Icon name="check" size={16} />}
-                Save settings
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
     </div>
   );
 }
@@ -1738,9 +1746,6 @@ export default function Admin() {
             <Route index element={<Dashboard />} />
             <Route path="products" element={<ProductsAdmin />} />
             <Route path="contacts" element={<Contacts />} />
-            <Route path="export-documents" element={<ExportDocuments />} />
-            <Route path="bulk-orders" element={<BulkOrders />} />
-            <Route path="settings" element={<Settings />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -21,6 +21,17 @@ export const Product = sequelize.define("Product", {
   description: { type: DataTypes.TEXT, allowNull: false },
   website_link: DataTypes.STRING,
   image: DataTypes.TEXT,
+  display_order: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0,
+    validate: { min: 0 },
+  },
+  is_active: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+  },
   slug: {
     type: DataTypes.STRING,
     unique: true,

@@ -5,7 +5,11 @@ import { useEffect, useRef } from "react";
  * Any child with `data-animate` will get the `is-visible` class
  * when it enters the viewport, triggering CSS keyframe animations.
  */
-export default function useScrollAnimation(threshold = 0.12, rootMargin = "0px 0px -8% 0px") {
+export default function useScrollAnimation(
+  threshold = 0.12,
+  rootMargin = "0px 0px -8% 0px",
+  contentVersion,
+) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -29,7 +33,10 @@ export default function useScrollAnimation(threshold = 0.12, rootMargin = "0px 0
 
     targets.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, [threshold, rootMargin]);
+  // Dynamic lists can add elements after the initial observer is installed.
+  // Re-register them when the caller's content version changes so they do not
+  // remain hidden by the pre-animation opacity rule.
+  }, [threshold, rootMargin, contentVersion]);
 
   return ref;
 }

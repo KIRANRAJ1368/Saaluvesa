@@ -50,12 +50,46 @@ function checkImageFile(file) {
   return null;
 }
 
+function getDisplayOrder(value) {
+  if (value === undefined || value === "") return 0;
+  const displayOrder = Number(value);
+  return Number.isInteger(displayOrder) && displayOrder >= 0
+    ? displayOrder
+    : null;
+}
+
+function getActiveState(value) {
+  return value === "true" || value === "1" || value === true;
+}
+
 router.get("/", async (req, res, next) => {
   try {
     const products = await Product.findAll({
-      order: [["createdAt", "DESC"]],
+      where: { is_active: true },
+      order: [["display_order", "ASC"], ["createdAt", "DESC"]],
     });
     res.json(products.map((product) => serialize(req, product)));
+  } catch (e) {
+    next(e);
+  }
+});
+
+// Fetching a single product is used by the public product-details page.  Keep
+// this lookup on the server so newly created products do not depend on a
+// client-side search through the whole catalogue.
+router.get("/:identifier", async (req, res, next) => {
+  try {
+    const { identifier } = req.params;
+    // Product IDs are numeric today, but accepting an ID as well makes public
+    // links resilient if a slug is changed later.
+    const product = /^\d+$/.test(identifier)
+      ? await Product.findByPk(Number(identifier))
+      : await Product.findOne({ where: { slug: identifier } });
+
+    if (!product || !product.is_active) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    res.json(serialize(req, product));
   } catch (e) {
     next(e);
   }
@@ -67,7 +101,7 @@ admin.use(authenticate, requireRole("admin", "staff"));
 admin.get("/", async (req, res, next) => {
   try {
     const products = await Product.findAll({
-      order: [["createdAt", "DESC"]],
+      order: [["display_order", "ASC"], ["createdAt", "DESC"]],
     });
     res.json(products.map((product) => serialize(req, product)));
   } catch (e) {
@@ -92,10 +126,16 @@ admin.post(
         fs.unlink(req.file.path, () => {});
         return res.status(422).json({ message: imageMessage });
       }
+      const displayOrder = getDisplayOrder(req.body.display_order);
+      if (displayOrder === null) {
+        return res.status(422).json({ message: "Display order must be a whole number of zero or greater." });
+      }
       const product = await Product.create({
         name: req.body.name,
         description: req.body.description,
         website_link: req.body.website_link || null,
+        display_order: displayOrder,
+        is_active: getActiveState(req.body.is_active),
         slug: slugify(req.body.name),
         image: `/uploads/${req.file.filename}`,
       });
@@ -128,6 +168,13 @@ admin.put(
         description: req.body.description,
         website_link: req.body.website_link || null,
       };
+
+      const displayOrder = getDisplayOrder(req.body.display_order);
+      if (displayOrder === null) {
+        return res.status(422).json({ message: "Display order must be a whole number of zero or greater." });
+      }
+      updates.display_order = displayOrder;
+      updates.is_active = getActiveState(req.body.is_active);
 
       if (req.file) {
         updates.image = `/uploads/${req.file.filename}`;

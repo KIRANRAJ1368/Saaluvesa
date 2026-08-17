@@ -185,8 +185,22 @@ export default function ContactSection() {
         <form className="contact-form" onSubmit={handleSubmit} noValidate data-animate="fade-right">
           {sent ? (
             <div className="contact-form__success">
-              <h3>Received.</h3>
-              <p>Your requirement has been sent to contact@saaluvesa.com. We'll be in touch shortly.</p>
+              <div className="contact-form__success-glow" aria-hidden="true" />
+              <div className="contact-form__success-icon">
+                <svg viewBox="0 0 52 52" aria-hidden="true">
+                  <circle cx="26" cy="26" r="25" fill="none" />
+                  <path fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+                </svg>
+              </div>
+              <h3>Message Sent Successfully</h3>
+              <p>Thank you for reaching out to Saaluvesa! Your enquiry has been received and is being processed.</p>
+              <button
+                type="button"
+                className="btn btn--mint contact-form__submit"
+                onClick={() => { setSent(false); setForm(initialForm); setErrors(initialErrors); setTouched({}); }}
+              >
+                Submit another enquiry
+              </button>
             </div>
           ) : (
             <>

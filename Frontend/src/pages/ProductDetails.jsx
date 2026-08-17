@@ -18,24 +18,28 @@ export default function ProductDetails() {
   const [apiProduct, setApiProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(!catalogProduct);
   const [loadError, setLoadError] = useState(false);
+  const [notFound, setNotFound] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
     setIsLoading(!catalogProduct);
     setLoadError(false);
+    setNotFound(false);
     setApiProduct(null);
 
-    api("/products")
-      .then((products) => {
-        if (!isMounted) return;
-        const matchingProduct = (products || []).find(
-          (item) => String(item.slug) === productId || String(item.id) === productId,
-        );
-        if (matchingProduct) setApiProduct(matchingProduct);
+    api(`/products/${encodeURIComponent(productId)}`)
+      .then((product) => {
+        if (isMounted) setApiProduct(product);
       })
-      .catch(() => {
-        if (isMounted) setLoadError(true);
+      .catch((error) => {
+        // Static catalogue entries can still render from their bundled data
+        // if the API is unavailable. A genuine missing dynamic product stays
+        // on the not-found state below.
+        if (isMounted) {
+          if (error.message === "Product not found") setNotFound(true);
+          else if (!catalogProduct) setLoadError(true);
+        }
       })
       .finally(() => {
         if (isMounted) setIsLoading(false);
@@ -47,6 +51,7 @@ export default function ProductDetails() {
   }, [catalogProduct, productId, retryKey]);
 
   const product = (() => {
+    if (notFound) return null;
     if (catalogProduct && apiProduct) {
       const image = assetUrl(apiProduct.image);
       return {

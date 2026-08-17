@@ -19,11 +19,15 @@ router.post(
       const product = source_product_id
         ? await Product.findByPk(source_product_id)
         : null;
-      await sendMail({
-        to: process.env.CONTACT_RECIPIENT || "contact@saaluvesa.com",
-        subject: `New website enquiry from ${submission.name}`,
-        text: `Name: ${submission.name}\nEmail: ${submission.email}\nAddress: ${submission.address || "—"}\nPostal code: ${submission.postal_code || "—"}\nProduct: ${product?.name || product_name || "General enquiry"}\n\nRequirement:\n${submission.requirement_details}`,
-      });
+      try {
+        await sendMail({
+          to: process.env.CONTACT_RECIPIENT || "contact@saaluvesa.com",
+          subject: `New website enquiry from ${submission.name}`,
+          text: `Name: ${submission.name}\nEmail: ${submission.email}\nAddress: ${submission.address || "—"}\nPostal code: ${submission.postal_code || "—"}\nProduct: ${product?.name || product_name || "General enquiry"}\n\nRequirement:\n${submission.requirement_details}`,
+        });
+      } catch (mailErr) {
+        console.error("Email notification failed:", mailErr.message);
+      }
       res.status(201).json(submission);
     } catch (e) {
       next(e);
@@ -56,6 +60,17 @@ admin.patch("/:id", async (req, res, next) => {
     res.json(
       await submission.update({ status: req.body.status || "Responded" }),
     );
+  } catch (e) {
+    next(e);
+  }
+});
+admin.delete("/:id", async (req, res, next) => {
+  try {
+    const submission = await ContactSubmission.findByPk(req.params.id);
+    if (!submission)
+      return res.status(404).json({ message: "Contact submission not found" });
+    await submission.destroy();
+    res.status(204).end();
   } catch (e) {
     next(e);
   }

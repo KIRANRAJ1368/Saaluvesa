@@ -14,14 +14,14 @@ const FALLBACK = PRODUCT_CATALOG.map((p) => ({
 }));
 
 export default function ProductsTeaser() {
-  const animRef = useScrollAnimation();
   const [products, setProducts] = useState(FALLBACK);
+  const animRef = useScrollAnimation(0.12, "0px 0px -8% 0px", products.length);
 
   useEffect(() => {
     let isMounted = true;
     api("/products")
       .then((rows) => {
-        if (!isMounted || !Array.isArray(rows) || !rows.length) return;
+        if (!isMounted || !Array.isArray(rows)) return;
         setProducts(
           rows.map((product) => {
             const staticMatch = PRODUCT_CATALOG.find((item) => item.id === product.slug);
