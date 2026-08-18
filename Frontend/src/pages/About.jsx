@@ -129,7 +129,7 @@ export default function About() {
           <div className="about-overview__layout">
             <div className="about-overview__text" data-animate="fade-left">
               <div className="about-section__head">
-                <div className="eyebrow about-section__eyebrow about-section__eyebrow--light">Our Story</div>
+                <div className="eyebrow about-section__eyebrow">Our Story</div>
                 <div className="about-established">
                   <span className="about-established__label">Established</span>
                   <span className="about-established__year">2025</span>
@@ -166,7 +166,7 @@ export default function About() {
       <section className="about-section about-section--navy">
         <div className="wrap">
           <div className="about-section__head" data-animate="fade-up">
-            <div className="eyebrow about-section__eyebrow about-section__eyebrow--dark">What We Do</div>
+            <div className="eyebrow about-section__eyebrow">What We Do</div>
             <h2>Creativity, Technology, and Craftsmanship.</h2>
             <p>
               At Saaluvesa Enterprises, we combine creativity, technology, and quality
@@ -206,7 +206,7 @@ export default function About() {
       <section className="about-section about-section--ivory-deep">
         <div className="wrap">
           <div className="about-section__head" data-animate="fade-up">
-            <div className="eyebrow about-section__eyebrow about-section__eyebrow--light">Vision & Mission</div>
+            <div className="eyebrow about-section__eyebrow">Vision & Mission</div>
             <h2>Guided by Purpose, Driven by Quality.</h2>
           </div>
 
@@ -236,7 +236,7 @@ export default function About() {
       <section className="about-section about-section--navy">
         <div className="wrap">
           <div className="about-section__head" data-animate="fade-up">
-            <div className="eyebrow about-section__eyebrow about-section__eyebrow--dark">Why Choose Us</div>
+            <div className="eyebrow about-section__eyebrow">Why Choose Us</div>
             <h2>Built on Expertise, Quality, and Reach.</h2>
           </div>
 
@@ -268,26 +268,40 @@ export default function About() {
             ))}
           </div>
 
+          {/* Castbull Apparel Brand Website Callout */}
           <div className="about-why-cta" data-animate="fade-up">
-            <p className="about-why-cta__text">
-              Requested to proceed with our integrated customer-friendly apparel
-              brand website{" "}
-              <a
-                href="https://castbull.co.in/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                castbull.co.in
-              </a>{" "}
-              to place your plain and custom printed requirements.
-            </p>
+            <div className="about-why-cta__content">
+              <div className="about-why-cta__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                  <polyline points="3.29 7 12 12 20.71 7" />
+                  <line x1="12" y1="22" x2="12" y2="12" />
+                </svg>
+              </div>
+              <p className="about-why-cta__text">
+                Requested to proceed with our Integrated Customer-friendly Apparel Brand Website,{" "}
+                <a
+                  href="https://castbull.co.in/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  https://castbull.co.in/
+                </a>
+                , to place your Plain and Custom Printed Requirements.
+              </p>
+            </div>
             <a
               href="https://castbull.co.in/"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn btn--mint"
+              className="btn btn--mint btn--pill about-why-cta__btn"
             >
-              Place Your Order
+              <span>Visit Castbull</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16" aria-hidden="true">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
             </a>
           </div>
         </div>
@@ -299,7 +313,7 @@ export default function About() {
           <div className="about-overview__layout about-overview__layout--reverse">
             <div className="about-overview__text" data-animate="fade-right">
               <div className="about-section__head">
-                <div className="eyebrow about-section__eyebrow about-section__eyebrow--light">Our Journey Ahead</div>
+                <div className="eyebrow about-section__eyebrow">Our Journey Ahead</div>
                 <h2>Rooted in Textiles, Reaching the World.</h2>
               </div>
               <p>

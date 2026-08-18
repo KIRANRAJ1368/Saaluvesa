@@ -8,7 +8,11 @@ import { PRODUCT_CATALOG } from "../data/products";
 import { api, assetUrl } from "../lib/api";
 
 function ArrowIcon() {
-  return <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8h8M8.5 4l4 4-4 4" /></svg>;
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M3.5 8h8M8.5 4l4 4-4 4" />
+    </svg>
+  );
 }
 
 export default function ProductDetails() {
@@ -85,7 +89,10 @@ export default function ProductDetails() {
     return (
       <div className="product-details-page">
         <Header />
-        <main className="details-not-found"><p className="eyebrow">Product Catalogue</p><h1>Loading product details…</h1></main>
+        <main className="details-not-found">
+          <p className="eyebrow">Product Catalogue</p>
+          <h1>Loading product details…</h1>
+        </main>
         <Footer />
       </div>
     );
@@ -98,7 +105,9 @@ export default function ProductDetails() {
         <main className="details-not-found">
           <p className="eyebrow">Product Catalogue</p>
           <h1>We couldn't load this product.</h1>
-          <p className="details-not-found__hint">Something went wrong while fetching the product details. Please try again.</p>
+          <p className="details-not-found__hint">
+            Something went wrong while fetching the product details. Please try again.
+          </p>
           <div className="details-not-found__actions">
             <button type="button" className="btn btn--mint" onClick={() => setRetryKey((k) => k + 1)}>
               Try again
@@ -132,7 +141,10 @@ export default function ProductDetails() {
       <Header />
       <main>
         <nav className="details-breadcrumb" aria-label="Breadcrumb">
-          <Link to="/">Home</Link><span>/</span><Link to="/products">Products</Link><span>/</span>
+          <Link to="/">Home</Link>
+          <span>/</span>
+          <Link to="/products">Products</Link>
+          <span>/</span>
           <strong>{product.name}</strong>
         </nav>
 
@@ -147,7 +159,32 @@ export default function ProductDetails() {
             <div className="details-summary">
               <h1>{product.name}</h1>
               <p className="details-summary__description">{product.shortDescription}</p>
-              <a className="btn btn--mint details-summary__button" href={product.website_link} target="_blank" rel="noopener noreferrer">Order Apparels</a>
+              <div className="details-summary__actions">
+                <a
+                  href={product.website_link || "https://castbull.co.in/"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn--mint details-summary__button"
+                >
+                  Order Apparels
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                </a>
+                <a
+                  href="#contact"
+                  className="btn btn--outline-light"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const el = document.getElementById("contact");
+                    if (el) el.scrollIntoView({ behavior: "smooth" });
+                  }}
+                >
+                  Request Bulk Quote
+                </a>
+              </div>
             </div>
           </div>
         </section>
@@ -155,13 +192,25 @@ export default function ProductDetails() {
         <section className="details-related">
           <div className="wrap">
             <div className="details-section-head">
-              <p className="eyebrow">Explore More</p><h2>Related products.</h2>
+              <p className="eyebrow">Explore More</p>
+              <h2>Related products.</h2>
             </div>
             <div className="details-related__grid">
               {related.map((item) => (
-                <Link className="details-related-card" to={`/products/${item.id}`} key={item.id} aria-label={`View details for ${item.name}`}>
-                  <div className="details-related-card__image"><img src={item.images[0]} alt={item.name} /></div>
-                  <div className="details-related-card__body"><p>{item.category}</p><h3>{item.name}</h3><span>View details <ArrowIcon /></span></div>
+                <Link
+                  className="details-related-card"
+                  to={`/products/${item.id}`}
+                  key={item.id}
+                  aria-label={`View details for ${item.name}`}
+                >
+                  <div className="details-related-card__image">
+                    <img src={item.images[0]} alt={item.name} />
+                  </div>
+                  <div className="details-related-card__body">
+                    <p>{item.category}</p>
+                    <h3>{item.name}</h3>
+                    <span>View details <ArrowIcon /></span>
+                  </div>
                 </Link>
               ))}
             </div>

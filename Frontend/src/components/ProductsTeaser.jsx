@@ -49,9 +49,6 @@ export default function ProductsTeaser() {
             <div className="eyebrow products-teaser__eyebrow">Our Products</div>
             <h2>Apparel & Beyond — Built for Global Export.</h2>
           </div>
-          <a href="#contact" className="btn btn--outline-light">
-            Request Custom Product Quote
-          </a>
         </div>
 
         <div className="products-teaser__grid">

@@ -1,78 +1,46 @@
 import { Router } from "express";
-import { ContactSubmission, Product } from "../models/index.js";
-import { authenticate, requireRole } from "../middleware/auth.js";
+import { Product } from "../models/index.js";
 import { validate } from "../middleware/validate.js";
 import { sendMail } from "../services/email.js";
+
 const router = Router();
+const CONTACT_RECIPIENT = "kiranraj1368@gmail.com";
+
+// Contact enquiries are deliberately email-only: no customer data is persisted.
 router.post(
   "/",
-  validate(["name", "email", "requirement_details"]),
+  validate(["name", "email", "address", "postal_code", "requirement_details"]),
   async (req, res, next) => {
     try {
-      const source_product_id =
-        req.body.product_id || req.query.product_id || null;
-      const product_name = req.body.product_name || req.query.product_name;
-      const submission = await ContactSubmission.create({
-        ...req.body,
-        source_product_id,
-      });
-      const product = source_product_id
-        ? await Product.findByPk(source_product_id)
-        : null;
-      try {
-        await sendMail({
-          to: process.env.CONTACT_RECIPIENT || "contact@saaluvesa.com",
-          subject: `New website enquiry from ${submission.name}`,
-          text: `Name: ${submission.name}\nEmail: ${submission.email}\nAddress: ${submission.address || "—"}\nPostal code: ${submission.postal_code || "—"}\nProduct: ${product?.name || product_name || "General enquiry"}\n\nRequirement:\n${submission.requirement_details}`,
-        });
-      } catch (mailErr) {
-        console.error("Email notification failed:", mailErr.message);
+      if (!/^\S+@\S+\.\S+$/.test(req.body.email)) {
+        return res.status(422).json({ message: "Please provide a valid email address." });
       }
-      res.status(201).json(submission);
-    } catch (e) {
-      next(e);
+      const sourceProductId = req.body.product_id || null;
+      const product = sourceProductId ? await Product.findByPk(sourceProductId) : null;
+      const productName = product?.name || req.body.product_name || "General enquiry";
+      await sendMail({
+        to: CONTACT_RECIPIENT,
+        replyTo: req.body.email,
+        subject: `New website enquiry from ${req.body.name}`,
+        text: [
+          `Name: ${req.body.name}`,
+          `Email: ${req.body.email}`,
+          `Address: ${req.body.address}`,
+          `Postal code: ${req.body.postal_code}`,
+          `Product: ${productName}`,
+          "",
+          "Requirement:",
+          req.body.requirement_details,
+        ].join("\n"),
+      });
+      return res.status(201).json({ message: "Your enquiry has been sent successfully." });
+    } catch (error) {
+      console.error("Contact enquiry email failed:", error);
+      return res.status(503).json({
+        message: "We could not send your enquiry right now. Please try again shortly.",
+      });
     }
   },
 );
-const admin = Router();
-admin.use(authenticate, requireRole("admin", "staff"));
-admin.get("/", async (req, res, next) => {
-  try {
-    const where = req.query.status ? { status: req.query.status } : {};
-    res.json(
-      await ContactSubmission.findAll({
-        where,
-        include: Product,
-        order: [["createdAt", "DESC"]],
-      }),
-    );
-  } catch (e) {
-    next(e);
-  }
-});
-admin.patch("/:id", async (req, res, next) => {
-  try {
-    const submission = await ContactSubmission.findByPk(req.params.id);
-    if (!submission)
-      return res.status(404).json({ message: "Contact submission not found" });
-    if (req.body.status && !["New", "Responded"].includes(req.body.status))
-      return res.status(422).json({ message: "Invalid status" });
-    res.json(
-      await submission.update({ status: req.body.status || "Responded" }),
-    );
-  } catch (e) {
-    next(e);
-  }
-});
-admin.delete("/:id", async (req, res, next) => {
-  try {
-    const submission = await ContactSubmission.findByPk(req.params.id);
-    if (!submission)
-      return res.status(404).json({ message: "Contact submission not found" });
-    await submission.destroy();
-    res.status(204).end();
-  } catch (e) {
-    next(e);
-  }
-});
-export { router as publicContact, admin as adminContacts };
+
+export { router as publicContact };

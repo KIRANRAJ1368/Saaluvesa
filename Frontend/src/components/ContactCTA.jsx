@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "./ContactCTA.css";
 import useScrollAnimation from "../hooks/useScrollAnimation";
 
@@ -13,9 +14,9 @@ export default function ContactCTA() {
           <p>Partner with Saaluvesa Enterprises Pvt Ltd for reliable manufacturing, custom printing, and global sourcing.</p>
         </div>
         <div className="contact-cta__buttons">
-          <a href="#contact" className="btn btn--mint">
+          <Link to="/contact" className="btn btn--mint">
             Contact Us
-          </a>
+          </Link>
           <a
             href="https://castbull.co.in"
             target="_blank"
@@ -28,4 +29,4 @@ export default function ContactCTA() {
       </div>
     </section>
   );
-}
+}

@@ -9,6 +9,9 @@ const transporter = nodemailer.createTransport({
     : undefined,
 });
 export async function sendMail(message) {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_FROM) {
+    throw new Error("Email service is not configured. Set SMTP_HOST and SMTP_FROM.");
+  }
   try {
     return await transporter.sendMail({
       from: process.env.SMTP_FROM,

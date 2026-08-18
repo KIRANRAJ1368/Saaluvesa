@@ -14,6 +14,7 @@ export default function ContactSection() {
   const [touched, setTouched] = useState({});
   const [sent, setSent] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const animRef = useScrollAnimation();
 
   function validateField(name, value) {
@@ -115,6 +116,8 @@ export default function ContactSection() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (isSubmitting) return;
+    setSubmitError("");
 
     // Mark all as touched on submit attempt
     const allTouched = Object.keys(initialForm).reduce((acc, key) => {
@@ -130,6 +133,7 @@ export default function ContactSection() {
       return; // Block submission until all required fields pass validation
     }
 
+    setIsSubmitting(true);
     try {
       const query = new URLSearchParams(location.search);
       await api("/contact", {
@@ -147,6 +151,8 @@ export default function ContactSection() {
       setSent(true);
     } catch (error) {
       setSubmitError(error.message || "We could not send your requirement. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -156,10 +162,10 @@ export default function ContactSection() {
         <div className="contact-section__info" data-animate="fade-left">
           <div className="eyebrow contact-section__eyebrow">Contact Us</div>
           <h2>Tell us what you need built.</h2>
-          <p>
+          {/* <p>
             Submissions here are emailed straight to{" "}
-            <a href="mailto:contact@saaluvesa.com">contact@saaluvesa.com</a>.
-          </p>
+            <a href="mailto:kiranraj1368@gmail.com">kiranraj1368@gmail.com</a>.
+          </p> */}
 
           <div className="contact-section__block">
             <h3>Registered Office</h3>
@@ -283,8 +289,8 @@ export default function ContactSection() {
                 {touched.requirement && errors.requirement && <span className="field-error">{errors.requirement}</span>}
               </label>
 
-              <button type="submit" className="btn btn--mint contact-form__submit">
-                Send Requirement
+              <button type="submit" className="btn btn--mint contact-form__submit" disabled={isSubmitting}>
+                {isSubmitting ? "Sending…" : "Send Requirement"}
               </button>
               {submitError && <p className="field-error">{submitError}</p>}
             </>

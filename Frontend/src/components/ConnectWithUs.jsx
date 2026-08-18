@@ -1,5 +1,4 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import "./ConnectWithUs.css";
 import useScrollAnimation from "../hooks/useScrollAnimation";
 
@@ -21,22 +20,6 @@ export default function ConnectWithUs() {
             your submitted requirements. We ensure reliable sourcing, verification, and
             delivery to meet your business requirements.
           </p>
-          <div className="connect__actions">
-            <a href="#products" className="btn btn--mint">
-              Explore PRODUCTS
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M4 12L12 4M12 4H6M12 4V10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </a>
-            <a
-              href="https://castbull.co.in/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn--outline-dark"
-            >
-              Order Apparel on CastBull
-            </a>
-          </div>
         </div>
 
         <div className="connect__box" data-animate="card">
@@ -70,14 +53,6 @@ export default function ConnectWithUs() {
             </li>
           </ol>
 
-          <div className="connect__box-cta">
-            <Link to="/contact" className="btn btn--mint">
-              Contact Us Page
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M4 12L12 4M12 4H6M12 4V10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </Link>
-          </div>
         </div>
       </div>
     </section>

@@ -34,7 +34,7 @@ export default function ValueStrip() {
               data-animate="card"
               key={v.title}
             >
-              <span className="">
+              <span className="stitch-line value-card__stitch">
                 <span />
                 <span />
                 <span />

@@ -98,19 +98,6 @@ export default function ProductsProcess() {
             </article>
           ))}
         </div>
-
-        <div className="products-process__cta" data-animate="fade-up">
-          <div>
-            <h3>Ready to place an order?</h3>
-            <p>
-              Send your plain or custom-printed apparel requirement and get a response within one
-              business day.
-            </p>
-          </div>
-          <a href="#contact" className="btn btn--mint">
-            Request a Quote
-          </a>
-        </div>
       </div>
     </section>
   );

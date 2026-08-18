@@ -20,6 +20,18 @@ export default function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && menuOpen) {
+        setMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [menuOpen]);
+
+  const closeMenu = () => setMenuOpen(false);
+
   const renderLink = (link, onClick) =>
     link.to ? (
       <Link key={link.label} to={link.to} onClick={onClick}>
@@ -35,7 +47,7 @@ export default function Header() {
     <div className="header-wrapper">
       <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
         <div className="wrap site-header__row">
-          <Link to="/" className="brand" aria-label="Saaluvesa — Home">
+          <Link to="/" className="brand" aria-label="Saaluvesa — Home" onClick={closeMenu}>
             <img className="brand__logo" src={logo} alt="Saaluvesa" />
             <span className="brand__text">
               SAALU<span>VESA</span>
@@ -46,13 +58,18 @@ export default function Header() {
             {NAV_LINKS.map((link) => renderLink(link))}
           </nav>
 
-          <a href="https://castbull.co.in/" target="_blank" rel="noopener noreferrer" className="btn btn--pill site-header__cta">
+          <a
+            href="https://castbull.co.in/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn--mint btn--pill site-header__cta"
+          >
             Order Apparels
           </a>
 
           <button
-            className="nav-toggle"
-            aria-label="Toggle menu"
+            className={`nav-toggle ${menuOpen ? "is-active" : ""}`}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((v) => !v)}
           >
@@ -64,15 +81,15 @@ export default function Header() {
 
         {menuOpen && (
           <nav className="site-nav--mobile" aria-label="Mobile">
-            {NAV_LINKS.map((link) => renderLink(link, () => setMenuOpen(false)))}
+            {NAV_LINKS.map((link) => renderLink(link, closeMenu))}
             <a
               href="https://castbull.co.in/"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn btn--pill"
-              onClick={() => setMenuOpen(false)}
+              className="btn btn--mint btn--pill site-nav--mobile-cta"
+              onClick={closeMenu}
             >
-              Order on CastBull
+              Order Apparels
             </a>
           </nav>
         )}

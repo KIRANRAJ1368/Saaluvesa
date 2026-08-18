@@ -3,11 +3,12 @@
   display: flex;
   flex-direction: column;
   background: var(--color-ivory);
+  width: 100%;
 }
 
-
 .products-page__intro {
-  padding: clamp(40px, 5vw, 64px) 0 0;
+  padding: clamp(36px, 5vw, 64px) 0 0;
+  width: 100%;
 }
 
 .products-page__intro .wrap {
@@ -16,7 +17,7 @@
 
 .products-page__intro .eyebrow {
   color: var(--color-mint-dim);
-  margin-bottom: 12px;
+  margin-bottom: clamp(8px, 1.2vw, 12px);
 }
 
 .products-page__intro h2 {
@@ -25,35 +26,37 @@
   font-weight: 700;
   line-height: 1.2;
   color: #07105b;
-  margin: 0 0 14px;
+  margin: 0 0 clamp(10px, 1.5vw, 14px);
+  word-break: break-word;
 }
 
 .products-page__intro p {
   color: var(--color-ink-soft);
   line-height: 1.72;
   margin: 0;
+  font-size: clamp(0.92rem, 1vw, 1rem);
 }
 
-
 .products-page__cta {
-  margin: 44px 0 0;
-  padding: 28px 32px;
+  margin: clamp(28px, 4vw, 44px) 0 0;
+  padding: clamp(18px, 2.5vw, 28px) clamp(18px, 3vw, 32px);
   border-radius: var(--radius-md);
   background: rgba(7, 16, 91, 0.04);
   border: 1px solid rgba(7, 16, 91, 0.12);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: clamp(16px, 2.5vw, 24px);
   flex-wrap: wrap;
 }
 
 .products-page__cta-text {
   margin: 0;
   color: var(--color-ink-soft);
-  font-size: 1.02rem;
+  font-size: clamp(0.92rem, 1vw, 1.02rem);
   line-height: 1.65;
   max-width: 62ch;
+  word-break: break-word;
 }
 
 .products-page__cta-text a {
@@ -68,17 +71,16 @@
 }
 
 /* ---------- Section rhythm ---------- */
-
-.products-page section:not(.page-banner) {
+.products-page section:not(.page-banner):not(.products-teaser):not(.products-process) {
   padding: var(--gap-section) 0;
 }
 
 /* ---------- Responsive ---------- */
-
 @media (max-width: 900px) {
   .products-page__cta {
     flex-direction: column;
     align-items: flex-start;
-    padding: 24px;
+    padding: 20px;
+    gap: 16px;
   }
 }

@@ -23,11 +23,37 @@ const include = [
     include: { model: AdminUser, as: "editor", attributes: ["id", "email"] },
   },
 ];
-const cleanItems = (items) =>
-  (items || []).map((item) => ({
-    ...item,
-    sub_total: (Number(item.qty) * Number(item.unit_value)).toFixed(2),
-  }));
+const cleanItems = (items) => {
+  if (!Array.isArray(items) || !items.length) {
+    const error = new Error("Add at least one product before generating the document.");
+    error.status = 422;
+    throw error;
+  }
+  return items.map((item) => {
+    const qty = Number(item.qty);
+    const unit_value = Number(item.unit_value);
+    const unit_net_weight = Number(item.unit_net_weight || 0);
+    if (
+      !String(item.product_name || "").trim() ||
+      !Number.isFinite(qty) || qty <= 0 ||
+      !Number.isFinite(unit_value) || unit_value < 0 ||
+      !Number.isFinite(unit_net_weight) || unit_net_weight < 0
+    ) {
+      const error = new Error("Every product needs a name, positive quantity, unit price, and unit net weight.");
+      error.status = 422;
+      throw error;
+    }
+    return {
+      ...item,
+      product_name: item.product_name.trim(),
+      qty,
+      unit_value,
+      unit_net_weight,
+      uom: item.uom || "PCS",
+      sub_total: (qty * unit_value).toFixed(2),
+    };
+  });
+};
 router.post(
   "/",
   validate(["invoice_no", "importer_name"]),
@@ -35,19 +61,26 @@ router.post(
     const tx = await sequelize.transaction();
     try {
       const { items, ...header } = req.body;
-      const document = await ExportDocument.create(header, { transaction: tx });
-      if (items?.length)
-        await ExportDocumentItem.bulkCreate(
-          cleanItems(items).map((item) => ({
-            ...item,
-            export_document_id: document.id,
-          })),
-          { transaction: tx },
-        );
+      const cleanDocumentItems = cleanItems(items);
+      const document = await ExportDocument.create(
+        { ...header, status: "Generated" },
+        { transaction: tx },
+      );
+      await ExportDocumentItem.bulkCreate(
+        cleanDocumentItems.map((item) => ({
+          ...item,
+          export_document_id: document.id,
+        })),
+        { transaction: tx },
+      );
       await recalculate(document, tx);
       await tx.commit();
       const result = await ExportDocument.findByPk(document.id, { include });
-      try { await emailInvoice(result); } catch (m) { console.error("Invoice email failed:", m.message); }
+      try {
+        await emailInvoice(result);
+      } catch (m) {
+        console.error("Invoice email failed:", m.message);
+      }
       res.status(201).json(result);
     } catch (e) {
       await tx.rollback();
@@ -55,6 +88,7 @@ router.post(
     }
   },
 );
+
 router.get("/", async (_req, res, next) => {
   try {
     res.json(
@@ -67,16 +101,19 @@ router.get("/", async (_req, res, next) => {
     next(e);
   }
 });
+
 router.get("/:id", async (req, res, next) => {
   try {
     const document = await ExportDocument.findByPk(req.params.id, { include });
     if (!document)
       return res.status(404).json({ message: "Export document not found" });
+
     res.json(document);
   } catch (e) {
     next(e);
   }
 });
+
 router.put("/:id", async (req, res, next) => {
   const tx = await sequelize.transaction();
   try {
@@ -123,13 +160,19 @@ router.put("/:id", async (req, res, next) => {
     );
     await tx.commit();
     const result = await ExportDocument.findByPk(document.id, { include });
-    try { await emailInvoice(result); } catch (m) { console.error("Invoice email failed:", m.message); }
-    res.json(result);
-  } catch (e) {
-    await tx.rollback();
-    next(e);
+      try {
+        await emailInvoice(result);
+      } catch (m) {
+        console.error("Invoice email failed:", m.message);
+      }
+      res.json(result);
+    } catch (e) {
+      await tx.rollback();
+      next(e);
+    }
   }
-});
+);
+
 async function replaceItems(req, res, next, items) {
   const tx = await sequelize.transaction();
   try {
@@ -174,29 +217,36 @@ async function replaceItems(req, res, next, items) {
     );
     await tx.commit();
     const result = await ExportDocument.findByPk(document.id, { include });
-    try { await emailInvoice(result); } catch (m) { console.error("Invoice email failed:", m.message); }
+    try {
+      await emailInvoice(result);
+    } catch (m) {
+      console.error("Invoice email failed:", m.message);
+    }
     return res.json(result);
   } catch (e) {
     await tx.rollback();
     return next(e);
   }
 }
+
 router.put("/:id/items", (req, res, next) =>
   replaceItems(req, res, next, req.body.items),
 );
+
 router.post("/:id/items/bulk-paste", async (req, res, next) => {
   try {
     const items = (req.body.text || "")
       .split(/\r?\n/)
       .filter(Boolean)
       .map((row) => {
-        const [product_name, qty, unit_value] = row
+        const [product_name, qty, unit_value, unit_net_weight] = row
           .split(/\t|,/)
           .map((v) => v.trim());
         return {
           product_name,
           qty: Number(qty),
           unit_value: Number(unit_value),
+          unit_net_weight: Number(unit_net_weight || 0),
           uom: "PCS",
         };
       })
@@ -207,16 +257,18 @@ router.post("/:id/items/bulk-paste", async (req, res, next) => {
           Number.isFinite(item.unit_value),
       );
     if (!items.length)
-      return res
-        .status(422)
-        .json({
-          message: "No valid rows. Expected product_name, qty, unit_value.",
-        });
+    return res
+      .status(422)
+      .json({
+        message:
+          "No valid rows. Expected product name, quantity, unit price, unit net weight.",
+      });
     return replaceItems(req, res, next, items);
   } catch (e) {
     return next(e);
   }
 });
+
 router.get("/:id/pdf", async (req, res, next) => {
   try {
     const buffer = await pdfBuffer(req.params.id);
@@ -228,4 +280,5 @@ router.get("/:id/pdf", async (req, res, next) => {
     next(e);
   }
 });
+
 export default router;

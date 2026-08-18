@@ -4,7 +4,11 @@ import heroBg from "../assets/saaluvesa_export_bg.jpg";
 
 export default function Hero() {
   const heroStyle = {
-    backgroundImage: `radial-gradient(50% 60% at 85% 15%, rgba(121, 246, 194, 0.15), transparent 70%), linear-gradient(105deg, rgba(5, 10, 60, 0.94) 0%, rgba(5, 10, 60, 0.85) 45%, rgba(7, 16, 91, 0.70) 100%), url(${heroBg})`
+    backgroundImage: [
+      "radial-gradient(50% 60% at 85% 15%, rgba(121, 246, 194, 0.15), transparent 70%)",
+      "linear-gradient(105deg, rgba(5, 10, 60, 0.94) 0%, rgba(5, 10, 60, 0.85) 45%, rgba(7, 16, 91, 0.70) 100%)",
+      `url(${heroBg})`,
+    ].join(", "),
   };
 
   return (
@@ -42,21 +46,33 @@ export default function Hero() {
               across global markets.
             </p>
 
-            <div className="hero__actions">
-              <a
-                href="https://castbull.co.in/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn--mint"
-              >
-                Order on CastBull
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path d="M4 12L12 4M12 4H6M12 4V10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            <div className="hero__notice-card">
+              <div className="hero__notice-icon-box" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                  <polyline points="3.29 7 12 12 20.71 7" />
+                  <line x1="12" y1="22" x2="12" y2="12" />
                 </svg>
-              </a>
-              <a href="#products" className="btn btn--outline-light">
-                View Products
-              </a>
+              </div>
+              <div className="hero__notice-content">
+                <p className="hero__notice-text">
+                  Requested to proceed with our Integrated Customer-friendly Apparel Brand Website,{" "}
+                  <a
+                    href="https://castbull.co.in/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hero__notice-link"
+                  >
+                    https://castbull.co.in/
+                    <svg className="hero__notice-external-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                  </a>
+                  , to place your Plain and Custom Printed Requirements.
+                </p>
+              </div>
             </div>
           </div>
         </div>

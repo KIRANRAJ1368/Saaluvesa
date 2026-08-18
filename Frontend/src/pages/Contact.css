@@ -137,3 +137,15 @@
     min-height: 320px;
   }
 }
+
+@media (max-width: 560px) {
+  .contact-map-card {
+    padding: 24px 20px;
+  }
+  .contact-map-frame-wrapper {
+    min-height: 260px;
+  }
+  .contact-map-frame-wrapper iframe {
+    min-height: 260px;
+  }
+}
