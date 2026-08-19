@@ -332,7 +332,7 @@ function Login() {
             <label htmlFor="login-email">Email address</label>
             <div className="admin-input">
               <Icon name="mail" size={16} />
-              <input id="login-email" name="email" type="email" placeholder="admin@saaluvesa.com" required autoComplete="email" />
+              <input id="login-email" name="email" type="email" placeholder="saaluvesa@gmail.com" required autoComplete="email" />
             </div>
           </div>
           <div className="admin-field">
