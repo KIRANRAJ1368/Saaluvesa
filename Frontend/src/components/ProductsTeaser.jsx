@@ -15,7 +15,7 @@ const FALLBACK = PRODUCT_CATALOG.map((p) => ({
 
 export default function ProductsTeaser() {
   const [products, setProducts] = useState(FALLBACK);
-  const animRef = useScrollAnimation(0.12, "0px 0px -8% 0px", products.length);
+  const animRef = useScrollAnimation(0.12, "0px 0px -8% 0px", products);
 
   useEffect(() => {
     let isMounted = true;
@@ -24,11 +24,16 @@ export default function ProductsTeaser() {
         if (!isMounted || !Array.isArray(rows)) return;
         setProducts(
           rows.map((product) => {
-            const staticMatch = PRODUCT_CATALOG.find((item) => item.id === product.slug);
+            const staticMatch = PRODUCT_CATALOG.find(
+              (item) =>
+                item.id === product.slug ||
+                String(item.id) === String(product.id) ||
+                item.name.toLowerCase() === product.name?.toLowerCase(),
+            );
             return {
               id: product.slug || product.id,
               name: product.name,
-              category: staticMatch?.category || "Catalogue",
+              category: staticMatch?.category || "Apparel Sector",
               description: product.description,
               image: assetUrl(product.image) || staticMatch?.images[0] || FALLBACK[0].image,
             };
@@ -63,7 +68,22 @@ export default function ProductsTeaser() {
                 className="product-card__image-container"
                 aria-label={`View details for ${p.name}`}
               >
-                <img src={p.image} alt={p.name} className="product-card__image" />
+                <img
+                  src={p.image}
+                  alt={p.name}
+                  className="product-card__image"
+                  onError={(e) => {
+                    const staticMatch = PRODUCT_CATALOG.find(
+                      (item) => item.id === p.id || item.name === p.name,
+                    );
+                    const fallback =
+                      staticMatch?.images[0] || FALLBACK[0].image;
+                    if (e.currentTarget.src !== fallback) {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = fallback;
+                    }
+                  }}
+                />
                 <span className="product-card__category">{p.category}</span>
               </Link>
               <div className="product-card__content">

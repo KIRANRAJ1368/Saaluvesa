@@ -44,7 +44,19 @@ export const uploadImage = multer({
   },
 }).single("image");
 
+const PROTECTED_FILES = new Set([
+  "product_custom.jpg",
+  "product_plain.jpg",
+  "product_merch.jpg",
+  "product_polos.jpg",
+  "product_sourcing.jpg",
+  "product_textiles.jpg",
+  "product_tshirts.jpg",
+]);
+
 export function removeUploadedFile(imagePath) {
   if (!imagePath || !imagePath.startsWith("/uploads/")) return;
-  fs.unlink(path.join(uploadsDirectory, path.basename(imagePath)), () => {});
+  const filename = path.basename(imagePath);
+  if (PROTECTED_FILES.has(filename)) return;
+  fs.unlink(path.join(uploadsDirectory, filename), () => {});
 }

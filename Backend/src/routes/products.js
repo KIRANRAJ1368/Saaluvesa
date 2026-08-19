@@ -27,11 +27,17 @@ const slugify = (name) =>
 
 function serialize(req, product) {
   const data = product.toJSON ? product.toJSON() : product;
+  let image = data.image || null;
+  if (image && !/^https?:\/\//i.test(image)) {
+    const host = req.get("host");
+    if (host) {
+      const proto = req.headers["x-forwarded-proto"] || req.protocol || "http";
+      image = `${proto}://${host}${image.startsWith("/") ? "" : "/"}${image}`;
+    }
+  }
   return {
     ...data,
-    image: data.image
-      ? `${req.protocol}://${req.get("host")}${data.image}`
-      : null,
+    image,
   };
 }
 

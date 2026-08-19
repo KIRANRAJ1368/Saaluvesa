@@ -70,8 +70,11 @@ svg,
 video,
 canvas {
   max-width: 100%;
-  height: auto;
   display: block;
+}
+
+img:not([class]) {
+  height: auto;
 }
 
 a {

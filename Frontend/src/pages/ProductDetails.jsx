@@ -17,8 +17,21 @@ function ArrowIcon() {
 
 export default function ProductDetails() {
   const { id } = useParams();
-  const productId = decodeURIComponent(id || "");
-  const catalogProduct = PRODUCT_CATALOG.find((item) => item.id === productId);
+  let productId = "";
+  try {
+    productId = decodeURIComponent(id || "");
+  } catch {
+    productId = id || "";
+  }
+
+  const catalogProduct =
+    PRODUCT_CATALOG.find(
+      (item) =>
+        item.id === productId ||
+        item.id.toLowerCase() === productId.toLowerCase() ||
+        item.name.toLowerCase() === productId.toLowerCase(),
+    ) || null;
+
   const [apiProduct, setApiProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(!catalogProduct);
   const [loadError, setLoadError] = useState(false);
@@ -37,9 +50,6 @@ export default function ProductDetails() {
         if (isMounted) setApiProduct(product);
       })
       .catch((error) => {
-        // Static catalogue entries can still render from their bundled data
-        // if the API is unavailable. A genuine missing dynamic product stays
-        // on the not-found state below.
         if (isMounted) {
           if (error.message === "Product not found") setNotFound(true);
           else if (!catalogProduct) setLoadError(true);
@@ -54,30 +64,56 @@ export default function ProductDetails() {
     };
   }, [catalogProduct, productId, retryKey]);
 
+  const matchedCatalog =
+    catalogProduct ||
+    (apiProduct
+      ? PRODUCT_CATALOG.find(
+          (item) =>
+            item.id === apiProduct.slug ||
+            item.name.toLowerCase() === apiProduct.name?.toLowerCase(),
+        )
+      : null);
+
   const product = (() => {
-    if (notFound) return null;
-    if (catalogProduct && apiProduct) {
+    if (notFound && !matchedCatalog) return null;
+    if (matchedCatalog && apiProduct) {
       const image = assetUrl(apiProduct.image);
       return {
-        ...catalogProduct,
-        name: apiProduct.name || catalogProduct.name,
-        shortDescription: apiProduct.description || catalogProduct.shortDescription,
-        description: apiProduct.description || catalogProduct.description,
+        ...matchedCatalog,
+        id: apiProduct.slug || matchedCatalog.id,
+        name: apiProduct.name || matchedCatalog.name,
+        shortDescription: apiProduct.description || matchedCatalog.shortDescription,
+        description: matchedCatalog.description || apiProduct.description,
         images: [
-          image || catalogProduct.images[0],
-          ...catalogProduct.images.slice(1),
+          image || matchedCatalog.images[0],
+          ...matchedCatalog.images.slice(1),
         ],
-        website_link: apiProduct.website_link || "https://castbull.co.in/",
+        website_link: apiProduct.website_link || matchedCatalog.website_link || "https://castbull.co.in/",
       };
     }
-    if (catalogProduct) return catalogProduct;
+    if (matchedCatalog) return matchedCatalog;
     if (apiProduct) {
       return {
-        id: apiProduct.id,
+        id: apiProduct.slug || String(apiProduct.id),
         name: apiProduct.name,
-        category: "Catalogue",
+        category: "Apparel Sector",
+        tagline: "High-quality custom apparel, manufactured for global export.",
         shortDescription: apiProduct.description,
+        aboutHeading: "Crafted for Performance, Scale, and Comfort.",
         description: apiProduct.description,
+        features: [
+          "Premium export-grade cotton & fabric blends",
+          "High-definition, wash-durable printing & stitching",
+          "Flexible order volumes from sampling to bulk containers",
+          "Dedicated quality inspection prior to packaging",
+          "Worldwide tracked dispatch & door-to-door delivery",
+        ],
+        customizations: [
+          { title: "Print Method", options: ["DTF", "DTG", "Screen Printing", "Embroidery"] },
+          { title: "Fabric Options", options: ["100% Cotton", "Cotton Blend", "Heavy Weight"] },
+          { title: "Sizing", options: ["XS – 5XL", "Kids Sizes", "Custom Fit"] },
+          { title: "Order Quantities", options: ["Single Piece", "Small Batch", "Bulk / Wholesale"] },
+        ],
         images: [assetUrl(apiProduct.image) || PRODUCT_CATALOG[0].images[0]],
         website_link: apiProduct.website_link || "https://castbull.co.in/",
       };
@@ -135,6 +171,9 @@ export default function ProductDetails() {
   }
 
   const related = PRODUCT_CATALOG.filter((item) => item.id !== product.id);
+  const activeImage =
+    (product.images && product.images[0]) ||
+    PRODUCT_CATALOG[0].images[0];
 
   return (
     <div className="product-details-page">
@@ -148,17 +187,30 @@ export default function ProductDetails() {
           <strong>{product.name}</strong>
         </nav>
 
+        {/* Hero Section */}
         <section className="details-hero">
           <div className="wrap details-hero__grid">
             <div className="details-gallery">
               <div className="details-gallery__main">
-                <img src={product.images[0]} alt={product.name} />
+                <img
+                  src={activeImage}
+                  alt={product.name}
+                  onError={(e) => {
+                    const fallback =
+                      matchedCatalog?.images?.[0] ||
+                      PRODUCT_CATALOG[0].images[0];
+                    if (e.currentTarget.src !== fallback) {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = fallback;
+                    }
+                  }}
+                />
               </div>
             </div>
 
             <div className="details-summary">
               <h1>{product.name}</h1>
-              <p className="details-summary__description">{product.shortDescription}</p>
+              <p className="details-summary__description">{product.shortDescription || product.description}</p>
               <div className="details-summary__actions">
                 <a
                   href={product.website_link || "https://castbull.co.in/"}
@@ -167,28 +219,13 @@ export default function ProductDetails() {
                   className="btn btn--mint details-summary__button"
                 >
                   Order Apparels
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                    <polyline points="15 3 21 3 21 9" />
-                    <line x1="10" y1="14" x2="21" y2="3" />
-                  </svg>
-                </a>
-                <a
-                  href="#contact"
-                  className="btn btn--outline-light"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    const el = document.getElementById("contact");
-                    if (el) el.scrollIntoView({ behavior: "smooth" });
-                  }}
-                >
-                  Request Bulk Quote
                 </a>
               </div>
             </div>
           </div>
         </section>
 
+        {/* Related Products */}
         <section className="details-related">
           <div className="wrap">
             <div className="details-section-head">
@@ -204,7 +241,19 @@ export default function ProductDetails() {
                   aria-label={`View details for ${item.name}`}
                 >
                   <div className="details-related-card__image">
-                    <img src={item.images[0]} alt={item.name} />
+                    <img
+                      src={item.images[0]}
+                      alt={item.name}
+                      onError={(e) => {
+                        const fallback =
+                          PRODUCT_CATALOG.find((c) => c.id === item.id)?.images[0] ||
+                          PRODUCT_CATALOG[0].images[0];
+                        if (e.currentTarget.src !== fallback) {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = fallback;
+                        }
+                      }}
+                    />
                   </div>
                   <div className="details-related-card__body">
                     <p>{item.category}</p>
