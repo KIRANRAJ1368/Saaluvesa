@@ -5,6 +5,22 @@
   width: 100%;
 }
 
+/* ── Language selector placement ─────────────────────── */
+/* Desktop: sits between the nav and the CTA button */
+.site-header__lang-desktop {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Mobile/tablet: hidden on desktop, shown next to hamburger */
+.site-header__lang-mobile {
+  display: none;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+
 .site-header {
   position: relative;
   background: rgba(5, 10, 60, 0.9);
@@ -36,6 +52,7 @@
   gap: 12px;
   margin-right: auto;
   flex-shrink: 0;
+  min-width: 0;
 }
 
 .brand__logo {
@@ -54,6 +71,8 @@
   color: var(--color-white);
   line-height: 1;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .brand__text span {
@@ -170,14 +189,60 @@
   display: none;
 }
 
-@media (max-width: 920px) {
+/* Lock body scroll when mobile menu is open */
+body.menu-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+/* ============================================
+   RESPONSIVE BREAKPOINTS
+   iPad Pro 12.9" : 1024px (portrait) / 1366px (landscape)
+   iPad Pro 11"   : 834px  (portrait) / 1194px (landscape)
+   iPad Air       : 820px  (portrait) / 1180px (landscape)
+   ============================================ */
+
+/* ===== iPad Pro landscape / tight desktop: compact nav spacing ===== */
+@media (max-width: 1200px) {
+  .site-header__row {
+    gap: clamp(12px, 2vw, 24px);
+  }
+
+  .site-nav {
+    gap: clamp(12px, 1.8vw, 24px);
+  }
+
+  .site-nav a {
+    font-size: clamp(0.84rem, 0.95vw, 0.9rem);
+  }
+
+  .site-header__cta {
+    padding: 8px 18px;
+    font-size: 0.86rem;
+    min-height: 40px;
+  }
+}
+
+/* ===== iPad portrait / small tablets: show hamburger ===== */
+@media (max-width: 960px) {
   .site-nav {
     display: none;
   }
 
+  /* Hide desktop lang selector, show mobile one */
+  .site-header__lang-desktop {
+    display: none;
+  }
+
+  .site-header__lang-mobile {
+    display: flex;
+    margin-left: auto;
+  }
+
   .site-header__cta {
     display: inline-flex;
-    margin-left: auto;
+    margin-left: 0;
     padding: 8px 16px;
     font-size: 0.84rem;
     min-height: 38px;
@@ -194,22 +259,23 @@
   .site-nav--mobile {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 12px 24px 28px;
+    gap: 0;
+    padding: 8px 24px 28px;
     background: rgba(5, 10, 60, 0.98);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-top: 1px solid rgba(121, 246, 194, 0.15);
     box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
-    max-height: calc(100vh - 80px);
+    max-height: calc(100vh - 76px);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .site-nav--mobile a {
     display: flex;
     align-items: center;
-    min-height: 44px;
-    padding: 10px 4px;
+    min-height: 48px;
+    padding: 12px 4px;
     color: rgba(255, 255, 255, 0.9);
     border-bottom: 1px solid var(--color-line-on-navy);
     font-size: 1rem;
@@ -217,7 +283,12 @@
     transition: color 0.2s var(--ease), padding-left 0.2s var(--ease);
   }
 
-  .site-nav--mobile a:hover {
+  .site-nav--mobile a:last-of-type {
+    border-bottom: none;
+  }
+
+  .site-nav--mobile a:hover,
+  .site-nav--mobile a:focus-visible {
     color: var(--color-mint);
     padding-left: 6px;
   }
@@ -229,9 +300,41 @@
     max-width: 240px;
     justify-content: center;
     border-bottom: none !important;
+    min-height: 44px;
   }
 }
 
+/* ===== Small tablets ===== */
+@media (max-width: 768px) {
+  .site-header__row {
+    padding-top: clamp(10px, 1.4vw, 14px);
+    padding-bottom: clamp(10px, 1.4vw, 14px);
+    gap: 10px;
+  }
+
+  .brand {
+    gap: 10px;
+  }
+
+  .site-header__cta {
+    padding: 7px 14px;
+    font-size: 0.8rem;
+    min-height: 36px;
+  }
+
+  .site-nav--mobile {
+    padding: 6px 20px 24px;
+    max-height: calc(100vh - 68px);
+  }
+
+  .site-nav--mobile a {
+    min-height: 46px;
+    padding: 10px 4px;
+    font-size: 0.96rem;
+  }
+}
+
+/* ===== Mobile ===== */
 @media (max-width: 540px) {
   .site-header__row {
     padding-top: 10px;
@@ -254,9 +357,59 @@
   }
 
   .site-header__cta {
-    padding: 7px 12px;
+    padding: 6px 12px;
     font-size: 0.76rem;
     min-height: 34px;
+  }
+
+  .nav-toggle {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    margin-left: 4px;
+  }
+
+  .nav-toggle span {
+    width: 18px;
+  }
+
+  .site-nav--mobile {
+    padding: 4px 16px 22px;
+    max-height: calc(100vh - 62px);
+  }
+
+  .site-nav--mobile a {
+    min-height: 44px;
+    padding: 10px 2px;
+    font-size: 0.92rem;
+  }
+
+  .site-nav--mobile-cta {
+    max-width: 100%;
+    margin-top: 12px;
+  }
+}
+
+/* ===== Very small screens ===== */
+@media (max-width: 360px) {
+  .brand__text {
+    font-size: 0.88rem;
+    max-width: 100px;
+  }
+
+  .brand {
+    gap: 6px;
+  }
+
+  .brand__logo {
+    width: 28px;
+    height: 28px;
+  }
+
+  .site-header__cta {
+    padding: 5px 10px;
+    font-size: 0.72rem;
+    min-height: 32px;
   }
 
   .nav-toggle {
@@ -267,22 +420,12 @@
   }
 
   .site-nav--mobile {
-    padding: 10px 16px 24px;
+    padding: 4px 12px 20px;
   }
 
-  .site-nav--mobile-cta {
-    max-width: 100%;
-  }
-}
-
-@media (max-width: 360px) {
-  .brand__text {
+  .site-nav--mobile a {
+    min-height: 42px;
+    padding: 8px 2px;
     font-size: 0.88rem;
   }
-
-  .site-header__cta {
-    padding: 5px 10px;
-    font-size: 0.72rem;
-    min-height: 32px;
-  }
-}
+}

@@ -65,6 +65,56 @@ body {
   position: relative;
 }
 
+/* ── Google Translate toolbar suppression ──────────────────────────────
+   Hides the top banner iframe and hover tooltip without disrupting
+   background translation worker frames.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+iframe.goog-te-banner-frame,
+iframe[id=":1.container"],
+iframe[id=":2.container"],
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-te-ftab-float {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0px !important;
+  max-height: 0px !important;
+  min-height: 0px !important;
+  position: fixed !important;
+  top: -99999px !important;
+  left: -99999px !important;
+  border: none !important;
+  pointer-events: none !important;
+  z-index: -999999 !important;
+}
+
+/* Prevent body/html top-shift Google applies */
+html {
+  top: 0px !important;
+}
+
+body {
+  top: 0px !important;
+  position: static !important;
+}
+
+html.translated-ltr,
+html.translated-rtl,
+body.translated-ltr,
+body.translated-rtl {
+  top: 0px !important;
+  margin-top: 0px !important;
+  padding-top: 0px !important;
+}
+
+
+
+
+
 img,
 svg,
 video,

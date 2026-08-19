@@ -1366,6 +1366,9 @@ function ExportDocuments() {
   const [rows, setRows] = useState([]);
   const [items, setItems] = useState([blankExportItem()]);
   const [paste, setPaste] = useState("");
+  const [taxType, setTaxType] = useState("");
+  const [taxRate, setTaxRate] = useState("");
+  const [currencyCode, setCurrencyCode] = useState("USD");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [generated, setGenerated] = useState(null);
@@ -1397,7 +1400,10 @@ function ExportDocuments() {
       const document = await api("/admin/export-documents", { method: "POST", body: JSON.stringify({ ...header, items }) });
       setGenerated(document);
       pushToast("success", "Export document generated and ready for review.");
-      setItems([blankExportItem()]); event.currentTarget.reset(); load();
+      setItems([blankExportItem()]);
+      setTaxType("");
+      setTaxRate("");
+      event.currentTarget.reset(); load();
     } catch (err) { setError(err.message || "Could not generate export document."); }
     finally { setSaving(false); }
   };
@@ -1406,16 +1412,29 @@ function ExportDocuments() {
     value: all.value + (Number(item.qty) || 0) * (Number(item.unit_value) || 0),
     weight: all.weight + (Number(item.qty) || 0) * (Number(item.unit_net_weight) || 0),
   }), { quantity: 0, value: 0, weight: 0 });
-  const total = totals.value;
+  const goodsValue = totals.value;
+  const numTaxRate = Number(taxRate) || 0;
+  const taxAmount = goodsValue * (numTaxRate / 100);
+  const finalTotal = goodsValue + taxAmount;
   return <div className="admin-page">
     <div className="admin-page-heading"><div><p className="admin-eyebrow">Orders report</p><h2>Generate export documents</h2></div><p>Add products, review calculated totals, then generate a professional proforma invoice.</p></div>
     <form className="admin-card admin-form" onSubmit={create}>
       <div className="admin-card__head"><div><h3>Document information</h3><p>Required fields are marked below.</p></div></div>
-      <div className="admin-form-grid"><div className="admin-field"><label>Invoice no. <span>required</span></label><input name="invoice_no" required placeholder="PI-2026-001" /></div><div className="admin-field"><label>Shipment date</label><input name="shipment_date" type="date" /></div><div className="admin-field"><label>Importer name <span>required</span></label><input name="importer_name" required placeholder="Customer company" /></div><div className="admin-field"><label>Importer email</label><input name="importer_email" type="email" placeholder="buyer@example.com" /></div><div className="admin-field admin-field--full"><label>Importer address</label><textarea name="importer_address" rows="2" placeholder="Full importer address" /></div><div className="admin-field"><label>Currency</label><input name="currency_code" defaultValue="USD" /></div><div className="admin-field"><label>Incoterms</label><input name="incoterms" placeholder="FOB / CIF / EXW" /></div></div>
+      <div className="admin-form-grid">
+        <div className="admin-field"><label>Invoice no. <span>required</span></label><input name="invoice_no" required placeholder="PI-2026-001" /></div>
+        <div className="admin-field"><label>Shipment date</label><input name="shipment_date" type="date" /></div>
+        <div className="admin-field"><label>Importer name <span>required</span></label><input name="importer_name" required placeholder="Customer company" /></div>
+        <div className="admin-field"><label>Importer email</label><input name="importer_email" type="email" placeholder="buyer@example.com" /></div>
+        <div className="admin-field admin-field--full"><label>Importer address</label><textarea name="importer_address" rows="2" placeholder="Full importer address" /></div>
+        <div className="admin-field"><label>Currency</label><input name="currency_code" value={currencyCode} onChange={(e) => setCurrencyCode(e.target.value)} /></div>
+        <div className="admin-field"><label>Incoterms</label><input name="incoterms" placeholder="FOB / CIF / EXW" /></div>
+        <div className="admin-field"><label>Tax / VAT type</label><input name="tax_type" value={taxType} onChange={(e) => setTaxType(e.target.value)} placeholder="e.g. GST, VAT, IGST (optional)" /></div>
+        <div className="admin-field"><label>Tax rate (%)</label><input name="tax_rate" type="number" min="0" max="100" step="0.01" value={taxRate} onChange={(e) => setTaxRate(e.target.value)} placeholder="0.00" /></div>
+      </div>
       <div className="admin-card__head" style={{ marginTop: 28 }}><div><h3>Products</h3><p>Add individually, or paste rows in the format below.</p></div></div>
       <div className="admin-field"><label>Paste product list</label><textarea value={paste} onChange={(e) => setPaste(e.target.value)} rows="3" placeholder={'T-Shirt, 100, 8.50, 0.18\nHoodie, 50, 16.00, 0.55'} /><small>Columns: Product name, Quantity, Unit price, Unit net weight (kg).</small><button className="admin-btn admin-btn--soft" type="button" onClick={addPastedItems} style={{ marginTop: 8 }}><Icon name="plus" size={15} /> Add pasted products</button></div>
       <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Product</th><th>Quantity</th><th>Unit price</th><th>Unit net weight (kg)</th><th>Line total</th><th /></tr></thead><tbody>{items.map((item, index) => <tr key={index}><td><input value={item.product_name} onChange={(e) => setItem(index, "product_name", e.target.value)} required placeholder="Product name" /></td><td><input value={item.qty} onChange={(e) => setItem(index, "qty", e.target.value)} required type="number" min="0.001" step="any" /></td><td><input value={item.unit_value} onChange={(e) => setItem(index, "unit_value", e.target.value)} required type="number" min="0" step="0.01" /></td><td><input value={item.unit_net_weight} onChange={(e) => setItem(index, "unit_net_weight", e.target.value)} required type="number" min="0" step="0.001" /></td><td>{((Number(item.qty) || 0) * (Number(item.unit_value) || 0)).toFixed(2)}</td><td><button type="button" className="admin-icon-btn admin-icon-btn--danger" disabled={items.length === 1} onClick={() => setItems((old) => old.filter((_, i) => i !== index))} aria-label="Remove product"><Icon name="trash" size={15} /></button></td></tr>)}</tbody></table></div>
-      <div className="admin-form__actions"><button type="button" className="admin-btn admin-btn--soft" onClick={() => setItems((old) => [...old, blankExportItem()])}><Icon name="plus" size={16} /> Add product</button><span style={{ marginLeft: "auto", fontWeight: 700 }}>Total: {total.toFixed(2)}</span><button className="admin-btn admin-btn--primary" disabled={saving}>{saving ? <Spinner size={16} /> : <Icon name="download" size={16} />}{saving ? "Generating…" : "Generate PDF"}</button></div>
+      <div className="admin-form__actions"><button type="button" className="admin-btn admin-btn--soft" onClick={() => setItems((old) => [...old, blankExportItem()])}><Icon name="plus" size={16} /> Add product</button><span style={{ marginLeft: "auto", fontWeight: 700 }}>Total: {currencyCode} {finalTotal.toFixed(2)}</span><button className="admin-btn admin-btn--primary" disabled={saving}>{saving ? <Spinner size={16} /> : <Icon name="download" size={16} />}{saving ? "Generating…" : "Generate PDF"}</button></div>
       {error && <p className="admin-field-error" role="alert"><Icon name="alert" size={14} />{error}</p>}
     </form>
     {items.length > 0 && <div className="export-line-calculations" aria-label="Per-product calculations">
@@ -1423,7 +1442,9 @@ function ExportDocuments() {
     </div>}
     <section className="export-totals" aria-label="Export document totals">
       <div><span>Total quantity</span><strong>{totals.quantity.toFixed(3).replace(/\.000$/, "")}</strong></div>
-      <div><span>Total value</span><strong>{totals.value.toFixed(2)}</strong></div>
+      <div><span>Goods value</span><strong>{currencyCode} {goodsValue.toFixed(2)}</strong></div>
+      {numTaxRate > 0 && <div><span>{taxType || "Tax"} ({numTaxRate}%)</span><strong>{currencyCode} {taxAmount.toFixed(2)}</strong></div>}
+      <div><span>Final total</span><strong>{currencyCode} {finalTotal.toFixed(2)}</strong></div>
       <div><span>Total net weight</span><strong>{totals.weight.toFixed(3)} kg</strong></div>
     </section>
     {generated && <section className="admin-card export-review" style={{ marginTop: 24 }}>
@@ -1432,9 +1453,17 @@ function ExportDocuments() {
         <div className="export-review__actions"><button type="button" className="admin-btn admin-btn--soft" onClick={() => window.print()}><Icon name="file-text" size={16} /> Print review</button><button type="button" className="admin-btn admin-btn--primary" onClick={() => download(`/admin/export-documents/${generated.id}/pdf`, `${generated.invoice_no}.pdf`)}><Icon name="download" size={16} /> Download PDF</button></div>
       </div>
       <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Product</th><th>Qty</th><th>Unit price</th><th>Unit net weight</th><th>Total value</th><th>Total weight</th></tr></thead><tbody>{generated.items?.map((item) => <tr key={item.id}><td>{item.product_name}</td><td>{item.qty}</td><td>{item.unit_value}</td><td>{item.unit_net_weight} kg</td><td>{item.sub_total}</td><td>{(Number(item.qty) * Number(item.unit_net_weight)).toFixed(3)} kg</td></tr>)}</tbody></table></div>
-      <div className="export-review__summary"><span>Total quantity: <strong>{generated.items?.reduce((sum, item) => sum + Number(item.qty), 0)}</strong></span><span>Total value: <strong>{generated.currency_code} {generated.total_goods_value}</strong></span><span>Total net weight: <strong>{generated.total_net_weight_kg} kg</strong></span></div>
+      <div className="export-review__summary">
+        <span>Total quantity: <strong>{generated.items?.reduce((sum, item) => sum + Number(item.qty), 0)}</strong></span>
+        <span>Goods value: <strong>{generated.currency_code} {Number(generated.total_goods_value || 0).toFixed(2)}</strong></span>
+        {(generated.tax_type || Number(generated.tax_rate) > 0) && (
+          <span>{generated.tax_type || "Tax"} ({Number(generated.tax_rate || 0).toFixed(2)}%): <strong>{generated.currency_code} {Number(generated.tax_amount || 0).toFixed(2)}</strong></span>
+        )}
+        <span>Final total: <strong>{generated.currency_code} {Number(generated.final_total_amount || generated.total_goods_value || 0).toFixed(2)}</strong></span>
+        <span>Total net weight: <strong>{generated.total_net_weight_kg} kg</strong></span>
+      </div>
     </section>}
-    <section className="admin-card admin-card--table" style={{ marginTop: 24 }}><div className="admin-card__head"><div><h3>Generated documents</h3><p>Download any previous PDF.</p></div></div><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Invoice</th><th>Importer</th><th>Products</th><th>Total</th><th>Date</th><th /></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td>{row.invoice_no}</td><td>{row.importer_name}</td><td>{row.items?.length || 0}</td><td>{row.currency_code} {row.total_goods_value}</td><td>{fmtDate(row.createdAt)}</td><td><button type="button" className="admin-btn admin-btn--soft admin-btn--sm" onClick={() => download(`/admin/export-documents/${row.id}/pdf`, `${row.invoice_no}.pdf`)}><Icon name="download" size={14} /> PDF</button></td></tr>)}</tbody></table></div></section>
+    <section className="admin-card admin-card--table" style={{ marginTop: 24 }}><div className="admin-card__head"><div><h3>Generated documents</h3><p>Download any previous PDF.</p></div></div><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Invoice</th><th>Importer</th><th>Products</th><th>Total</th><th>Date</th><th /></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td>{row.invoice_no}</td><td>{row.importer_name}</td><td>{row.items?.length || 0}</td><td>{row.currency_code} {Number(row.final_total_amount || row.total_goods_value || 0).toFixed(2)}</td><td>{fmtDate(row.createdAt)}</td><td><button type="button" className="admin-btn admin-btn--soft admin-btn--sm" onClick={() => download(`/admin/export-documents/${row.id}/pdf`, `${row.invoice_no}.pdf`)}><Icon name="download" size={14} /> PDF</button></td></tr>)}</tbody></table></div></section>
   </div>;
 }
 

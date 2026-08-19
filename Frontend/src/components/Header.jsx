@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./Header.css";
 import logo from "../assets/logo.jpeg";
+import LanguageSelector from "./LanguageSelector";
 
 const NAV_LINKS = [
   { label: "Home", href: "/#home" },
@@ -16,7 +17,7 @@ export default function Header() {
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
-    window.addEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -28,6 +29,15 @@ export default function Header() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.classList.add("menu-open");
+    } else {
+      document.body.classList.remove("menu-open");
+    }
+    return () => document.body.classList.remove("menu-open");
   }, [menuOpen]);
 
   const closeMenu = () => setMenuOpen(false);
@@ -47,7 +57,7 @@ export default function Header() {
     <div className="header-wrapper">
       <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
         <div className="wrap site-header__row">
-          <Link to="/" className="brand" aria-label="Saaluvesa — Home" onClick={closeMenu}>
+          <Link to="/" className="brand" aria-label="Saaluvesa Home" onClick={closeMenu}>
             <img className="brand__logo" src={logo} alt="Saaluvesa" />
             <span className="brand__text">
               SAALU<span>VESA</span>
@@ -58,6 +68,11 @@ export default function Header() {
             {NAV_LINKS.map((link) => renderLink(link))}
           </nav>
 
+          {/* Language selector - desktop (visible above 960px) */}
+          <div className="site-header__lang-desktop">
+            <LanguageSelector />
+          </div>
+
           <a
             href="https://castbull.co.in/"
             target="_blank"
@@ -67,10 +82,16 @@ export default function Header() {
             Order Apparels
           </a>
 
+          {/* Language selector - mobile/tablet (visible below 960px, next to hamburger) */}
+          <div className="site-header__lang-mobile">
+            <LanguageSelector />
+          </div>
+
           <button
             className={`nav-toggle ${menuOpen ? "is-active" : ""}`}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
+            aria-controls="mobile-nav"
             onClick={() => setMenuOpen((v) => !v)}
           >
             <span />
@@ -80,7 +101,7 @@ export default function Header() {
         </div>
 
         {menuOpen && (
-          <nav className="site-nav--mobile" aria-label="Mobile">
+          <nav id="mobile-nav" className="site-nav--mobile" aria-label="Mobile">
             {NAV_LINKS.map((link) => renderLink(link, closeMenu))}
             <a
               href="https://castbull.co.in/"

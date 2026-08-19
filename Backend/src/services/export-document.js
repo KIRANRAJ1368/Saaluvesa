@@ -6,6 +6,72 @@ import {
 } from "../models/index.js";
 import { sendMail } from "./email.js";
 
+export function numberToWords(amount, currency = "USD") {
+  const num = Number(amount);
+  if (!Number.isFinite(num) || num < 0) return "";
+
+  const ones = [
+    "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+    "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+    "Seventeen", "Eighteen", "Nineteen",
+  ];
+  const tens = [
+    "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety",
+  ];
+
+  function convertGroup(n) {
+    let str = "";
+    if (n >= 100) {
+      str += ones[Math.floor(n / 100)] + " Hundred ";
+      n %= 100;
+    }
+    if (n >= 20) {
+      str += tens[Math.floor(n / 10)] + " ";
+      n %= 10;
+    }
+    if (n > 0) {
+      str += ones[n] + " ";
+    }
+    return str.trim();
+  }
+
+  const integerPart = Math.floor(num);
+  const decimalPart = Math.round((num - integerPart) * 100);
+
+  if (integerPart === 0 && decimalPart === 0) {
+    return `${currency} Zero Only`.toUpperCase();
+  }
+
+  let words = "";
+  let n = integerPart;
+
+  if (n >= 1000000000) {
+    words += convertGroup(Math.floor(n / 1000000000)) + " Billion ";
+    n %= 1000000000;
+  }
+  if (n >= 1000000) {
+    words += convertGroup(Math.floor(n / 1000000)) + " Million ";
+    n %= 1000000;
+  }
+  if (n >= 1000) {
+    words += convertGroup(Math.floor(n / 1000)) + " Thousand ";
+    n %= 1000;
+  }
+  if (n > 0) {
+    words += convertGroup(n) + " ";
+  }
+
+  words = words.trim();
+  if (!words) words = "Zero";
+
+  let result = `${currency} ${words}`;
+  if (decimalPart > 0) {
+    result += ` and ${convertGroup(decimalPart)} Cents`;
+  }
+  result += " Only";
+  return result.toUpperCase();
+}
+
 export async function recalculate(document, transaction) {
   const items = await ExportDocumentItem.findAll({
     where: { export_document_id: document.id },
@@ -20,9 +86,17 @@ export async function recalculate(document, transaction) {
       total + Number(item.qty) * Number(item.unit_net_weight || 0),
     0,
   );
+  const taxRate = Number(document.tax_rate) || 0;
+  const taxAmount = (goods * (taxRate / 100));
+  const finalTotal = goods + taxAmount;
+  const words = numberToWords(finalTotal, document.currency_code || "USD");
+
   await document.update(
     {
       total_goods_value: goods.toFixed(2),
+      tax_amount: taxAmount.toFixed(2),
+      final_total_amount: finalTotal.toFixed(2),
+      total_amount_words: words,
       total_net_weight_kg: kg.toFixed(3),
       total_net_weight_lbs: (kg * 2.20462262).toFixed(3),
     },
@@ -97,7 +171,7 @@ export async function pdfBuffer(documentId) {
   pdf.moveTo(38, y).lineTo(555, y).stroke();
   pdf.font("Helvetica");
   document.items.forEach((item) => {
-    if (y > 700) {
+    if (y > 670) {
       pdf.addPage();
       y = 45;
     }
@@ -119,18 +193,31 @@ export async function pdfBuffer(documentId) {
     y += 26;
     pdf.moveTo(38, y).lineTo(555, y).stroke();
   });
-  pdf.y = y + 16;
-  pdf
-    .fontSize(9)
-    .font("Helvetica-Bold")
-    .text(`No. of Packages: ${document.no_of_packages || "—"}`)
-    .text(
-      `Total Goods Value: ${document.currency_code || ""} ${document.total_goods_value}`,
-    )
-    .text(
-      `Total Weight: ${document.total_net_weight_kg} KG / ${document.total_net_weight_lbs} LBS`,
-    );
+  pdf.y = y + 14;
+
+  const hasTax = document.tax_type || Number(document.tax_rate) > 0;
+  const currency = document.currency_code || "USD";
+  const goodsVal = Number(document.total_goods_value || 0).toFixed(2);
+  const taxRate = Number(document.tax_rate || 0).toFixed(2);
+  const taxAmt = Number(document.tax_amount || 0).toFixed(2);
+  const finalVal = Number(document.final_total_amount || document.total_goods_value || 0).toFixed(2);
+  const wordsVal = document.total_amount_words || numberToWords(finalVal, currency);
+
+  pdf.fontSize(9).font("Helvetica-Bold");
+  pdf.text(`No. of Packages: ${document.no_of_packages || "—"}`);
+  pdf.text(`Total Value of Goods: ${currency} ${goodsVal}`);
+
+  if (hasTax) {
+    pdf.text(`Tax (${document.tax_type || "Tax"} @ ${taxRate}%): ${currency} ${taxAmt}`);
+  }
+  pdf.text(`Final Total Amount: ${currency} ${finalVal}`);
+  pdf.text(`Total Weight: ${document.total_net_weight_kg} KG / ${document.total_net_weight_lbs} LBS`);
+  pdf.moveDown(0.5);
+
+  pdf.fontSize(8.5).font("Helvetica-BoldOblique");
+  pdf.text(`Total Amount in Words: ${wordsVal}`);
   pdf.moveDown();
+
   pdf
     .fontSize(8)
     .font("Helvetica")

@@ -1,0 +1,223 @@
+/* ============================================================
+   Language Selector - custom Google Translate driver
+   Matches the site's navy/mint design language
+   ============================================================ */
+
+.lang-selector {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 200;
+}
+
+/* Trigger button */
+.lang-selector__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(121, 246, 194, 0.08);
+  border: 1px solid rgba(121, 246, 194, 0.3);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 6px 12px 6px 9px;
+  min-height: 36px;
+  white-space: nowrap;
+  transition: background 0.2s var(--ease), border-color 0.2s var(--ease), color 0.2s var(--ease);
+  outline: none;
+}
+
+.lang-selector__trigger:hover,
+.lang-selector--open .lang-selector__trigger {
+  background: rgba(121, 246, 194, 0.16);
+  border-color: var(--color-mint);
+  color: var(--color-white);
+}
+
+.lang-selector__trigger:focus-visible {
+  outline: 2px solid var(--color-mint-dim);
+  outline-offset: 2px;
+}
+
+/* Icons */
+.lang-selector__globe {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  color: var(--color-mint);
+}
+
+.lang-selector__chevron {
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+  transition: transform 0.2s var(--ease);
+}
+
+.lang-selector--open .lang-selector__chevron {
+  transform: rotate(180deg);
+}
+
+/* Label text */
+.lang-selector__label {
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Dropdown */
+.lang-selector__dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 190px;
+  max-height: 320px;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  background: rgba(5, 10, 60, 0.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(121, 246, 194, 0.2);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  animation: langDropIn 0.18s var(--ease) both;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(121, 246, 194, 0.3) transparent;
+}
+
+.lang-selector__dropdown::-webkit-scrollbar {
+  width: 4px;
+}
+
+.lang-selector__dropdown::-webkit-scrollbar-thumb {
+  background: rgba(121, 246, 194, 0.3);
+  border-radius: 4px;
+}
+
+.lang-selector__dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@keyframes langDropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Options */
+.lang-selector__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 16px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  outline: none;
+}
+
+.lang-selector__option:hover,
+.lang-selector__option:focus-visible {
+  background: rgba(121, 246, 194, 0.1);
+}
+
+.lang-selector__option.is-active {
+  background: rgba(121, 246, 194, 0.15);
+}
+
+.lang-selector__option-native {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-white);
+  flex: 1;
+  min-width: 0;
+}
+
+.lang-selector__option.is-active .lang-selector__option-native {
+  color: var(--color-mint);
+}
+
+.lang-selector__option-en {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+/* Tablet / iPad - hide text label, keep globe icon only */
+@media (max-width: 960px) {
+  .lang-selector__label {
+    display: none;
+  }
+
+  .lang-selector__trigger {
+    padding: 6px 9px;
+    min-height: 38px;
+  }
+
+  .lang-selector__chevron {
+    display: none;
+  }
+
+  .lang-selector__globe {
+    width: 17px;
+    height: 17px;
+  }
+
+  /* Align dropdown to the left on small screens to prevent overflow */
+  .lang-selector__dropdown {
+    right: auto;
+    left: 0;
+    min-width: 180px;
+  }
+}
+
+@media (max-width: 540px) {
+  .lang-selector__trigger {
+    padding: 5px 8px;
+    min-height: 34px;
+  }
+
+  .lang-selector__globe {
+    width: 16px;
+    height: 16px;
+  }
+
+  .lang-selector__dropdown {
+    max-height: 260px;
+    border-radius: 12px;
+  }
+
+  .lang-selector__option {
+    padding: 8px 14px;
+  }
+
+  .lang-selector__option-native {
+    font-size: 0.86rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .lang-selector__trigger {
+    padding: 5px 7px;
+    min-height: 32px;
+  }
+
+  .lang-selector__globe {
+    width: 15px;
+    height: 15px;
+  }
+}

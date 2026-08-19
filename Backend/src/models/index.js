@@ -73,6 +73,11 @@ export const ExportDocument = sequelize.define("ExportDocument", {
   no_of_packages: DataTypes.INTEGER,
   package_description: DataTypes.TEXT,
   total_goods_value: { type: DataTypes.DECIMAL(14, 2), defaultValue: 0 },
+  tax_type: { type: DataTypes.STRING, defaultValue: null },
+  tax_rate: { type: DataTypes.DECIMAL(6, 2), defaultValue: 0 },
+  tax_amount: { type: DataTypes.DECIMAL(14, 2), defaultValue: 0 },
+  final_total_amount: { type: DataTypes.DECIMAL(14, 2), defaultValue: 0 },
+  total_amount_words: DataTypes.TEXT,
   total_net_weight_kg: { type: DataTypes.DECIMAL(14, 3), defaultValue: 0 },
   total_net_weight_lbs: { type: DataTypes.DECIMAL(14, 3), defaultValue: 0 },
   status: {

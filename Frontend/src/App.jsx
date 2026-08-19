@@ -15,6 +15,8 @@ import Contact from "./pages/Contact";
 import Products from "./pages/Products";
 import ProductDetails from "./pages/ProductDetails";
 
+import { getSavedLanguageCode, applyLanguage } from "./components/LanguageSelector";
+
 function ScrollToTopOrHash() {
   const { pathname, hash } = useLocation();
 

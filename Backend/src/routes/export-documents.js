@@ -131,6 +131,9 @@ router.put("/:id", async (req, res, next) => {
           "createdAt",
           "updatedAt",
           "total_goods_value",
+          "tax_amount",
+          "final_total_amount",
+          "total_amount_words",
           "total_net_weight_kg",
           "total_net_weight_lbs",
         ].includes(key),
@@ -154,6 +157,7 @@ router.put("/:id", async (req, res, next) => {
       );
     }
     await document.update(req.body, { transaction: tx });
+    await recalculate(document, tx);
     await ExportDocumentAudit.bulkCreate(
       changes.map((change) => ({ ...change, export_document_id: document.id })),
       { transaction: tx },

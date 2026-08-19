@@ -5,9 +5,173 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/jpeg" href="/src/assets/logo.jpeg" />
     <title>Saaluvesa Enterprises Pvt Ltd</title>
+
+    <style>
+      /* Completely hide ONLY the Google Translate top banner frame & hover tooltip */
+      .goog-te-banner-frame,
+      .goog-te-banner-frame.skiptranslate,
+      iframe.goog-te-banner-frame,
+      iframe[id=":1.container"],
+      iframe[id=":2.container"],
+      #goog-gt-tt,
+      .goog-te-balloon-frame,
+      .goog-te-ftab-float {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0px !important;
+        max-height: 0px !important;
+        min-height: 0px !important;
+        opacity: 0 !important;
+        position: fixed !important;
+        top: -99999px !important;
+        left: -99999px !important;
+        border: none !important;
+        pointer-events: none !important;
+        z-index: -999999 !important;
+      }
+
+      /* Prevent Google Translate from shifting the layout */
+      html {
+        top: 0px !important;
+      }
+      body {
+        top: 0px !important;
+        position: static !important;
+      }
+      html.translated-ltr,
+      html.translated-rtl,
+      body.translated-ltr,
+      body.translated-rtl {
+        top: 0px !important;
+        margin-top: 0px !important;
+        padding-top: 0px !important;
+      }
+
+      /* Off-screen container for Google Translate widget */
+      #google_translate_element {
+        position: absolute !important;
+        top: -9999px !important;
+        left: -9999px !important;
+        width: 1px !important;
+        height: 1px !important;
+        overflow: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Google Translate Host Element -->
+    <div id="google_translate_element"></div>
+
+    <script>
+      (function () {
+        function hideBanner(node) {
+          if (node && node.nodeType === 1) {
+            if (
+              node.classList.contains('goog-te-banner-frame') ||
+              node.id === 'goog-gt-tt' ||
+              node.id === ':1.container' ||
+              node.id === ':2.container'
+            ) {
+              node.style.setProperty('display', 'none', 'important');
+              node.style.setProperty('visibility', 'hidden', 'important');
+              node.style.setProperty('height', '0px', 'important');
+              node.style.setProperty('top', '-99999px', 'important');
+            }
+          }
+        }
+
+        var obs = new MutationObserver(function (mutations) {
+          for (var i = 0; i < mutations.length; i++) {
+            var added = mutations[i].addedNodes;
+            for (var j = 0; j < added.length; j++) {
+              hideBanner(added[j]);
+            }
+          }
+          if (document.body && document.body.style.top && document.body.style.top !== '0px') {
+            document.body.style.top = '0px';
+          }
+        });
+
+        if (document.body) {
+          obs.observe(document.body, { childList: true });
+        } else {
+          document.addEventListener('DOMContentLoaded', function () {
+            obs.observe(document.body, { childList: true });
+          });
+        }
+      })();
+
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement(
+          {
+            pageLanguage: 'en',
+            includedLanguages: 'ta,hi,te,kn,ml,mr,bn,gu,pa,ur,en,ar,fr,de,es,zh-CN,ja,ko,ru,pt,it',
+            autoDisplay: false,
+          },
+          'google_translate_element'
+        );
+      }
+
+      window.triggerGoogleTranslate = function (langCode) {
+        var val = (langCode === 'en') ? '/en/en' : ('/en/' + langCode);
+        document.cookie = 'googtrans=' + val + '; path=/;';
+        document.cookie = 'googtrans=' + val + '; domain=' + location.hostname + '; path=/;';
+
+        if (langCode === 'en') {
+          document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+          document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=' + location.hostname + '; path=/;';
+        }
+
+        var select = document.querySelector('.goog-te-combo');
+        if (!select) return false;
+
+        var targetIndex = -1;
+        for (var i = 0; i < select.options.length; i++) {
+          var opt = select.options[i];
+          if (langCode === 'en') {
+            if (opt.value === '' || opt.value === 'en' || opt.text.toLowerCase().indexOf('select') !== -1 || opt.text.toLowerCase().indexOf('english') !== -1) {
+              targetIndex = i;
+              break;
+            }
+          } else {
+            if (opt.value.toLowerCase() === langCode.toLowerCase()) {
+              targetIndex = i;
+              break;
+            }
+          }
+        }
+
+        if (targetIndex !== -1) {
+          select.selectedIndex = targetIndex;
+          select.value = select.options[targetIndex].value;
+          select.options[targetIndex].selected = true;
+        } else {
+          select.value = (langCode === 'en') ? '' : langCode;
+        }
+
+        try {
+          var evt = document.createEvent('HTMLEvents');
+          evt.initEvent('change', true, true);
+          select.dispatchEvent(evt);
+        } catch (e) {}
+
+        try {
+          select.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+          select.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+        } catch (e) {}
+
+        if (typeof select.onchange === 'function') {
+          try { select.onchange(); } catch (e) {}
+        }
+
+        return true;
+      };
+    </script>
+    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
   </body>
 </html>
