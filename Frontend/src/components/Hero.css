@@ -244,35 +244,31 @@
 
 /* ============================================
    RESPONSIVE BREAKPOINTS
-   iPad Pro 12.9" : 1024px (portrait) / 1366px (landscape)
-   iPad Pro 11"   : 834px  (portrait) / 1194px (landscape)
+   iPad Pro 12.9\" : 1024px (portrait) / 1366px (landscape)
+   iPad Pro 11\"   : 834px  (portrait) / 1194px (landscape)
    iPad Air       : 820px  (portrait) / 1180px (landscape)
-   iPad mini      : 768px  (portrait) / 1024px (landscape)
+   iPad Mini      : 768px  (portrait) / 1024px (landscape)
    ============================================ */
 
-/* ===== iPad Pro 12.9" landscape / large tablets: single column ===== */
-@media (max-width: 1400px) {
+/* ===== Desktop > 1366px: two-column grid (default above) ===== */
+
+/* ===== iPad Pro landscape & all iPads (768px–1366px): single column, no giant empty space ===== */
+@media (max-width: 1366px) {
   .hero {
+    /* Remove the full-viewport-height lock — let content + padding set the height */
     min-height: auto;
-    min-height: calc(100vh - 76px);
-    padding: clamp(44px, 5.5vw, 64px) 0;
+    align-items: flex-start;
+    padding: clamp(48px, 6vw, 80px) 0;
   }
 
   .hero__inner {
     grid-template-columns: 1fr;
     gap: clamp(28px, 3.5vw, 40px);
+    align-items: start;
   }
 
   .hero__copy {
     max-width: 100%;
-  }
-
-  .hero__visual {
-    aspect-ratio: 16 / 9;
-    max-height: 420px;
-    margin: 0 auto;
-    width: 100%;
-    border-radius: var(--radius-md);
   }
 
   .hero__stitch {
@@ -281,65 +277,199 @@
   }
 }
 
-/* ===== iPad Pro portrait / standard tablets ===== */
-@media (max-width: 1100px) {
+/* ===== iPad Pro landscape (1024–1366px) ===== */
+@media (min-width: 1024px) and (max-width: 1366px) {
+  .hero {
+    padding: clamp(56px, 6.5vw, 88px) 0;
+  }
+
   .hero__inner {
-    max-width: 900px;
-    gap: clamp(24px, 3vw, 36px);
+    padding: 0 clamp(32px, 4vw, 56px);
+    gap: 36px;
   }
 
   .hero__headline {
-    font-size: clamp(1.9rem, 4.5vw, 2.8rem);
+    font-size: clamp(2.2rem, 3.2vw, 2.9rem);
+    line-height: 1.14;
+    margin-bottom: 16px;
+  }
+
+  .hero__eyebrow {
+    margin-bottom: 14px;
   }
 
   .hero__sub {
-    font-size: clamp(0.94rem, 1.1vw, 1.05rem);
+    font-size: clamp(0.96rem, 1.1vw, 1.05rem);
+    line-height: 1.68;
+    margin-bottom: 22px;
+    max-width: 68ch;
+  }
+
+  .hero__notice-card {
+    padding: 16px 20px;
+    gap: 14px;
+    max-width: 680px;
+  }
+
+  .hero__notice-text {
+    font-size: 0.92rem;
   }
 
   .hero__visual {
-    max-height: 380px;
+    aspect-ratio: 16 / 7;
+    max-height: 400px;
+    margin: 0 auto;
+    width: 100%;
+    border-radius: var(--radius-md);
+  }
+
+  .hero__badge {
+    padding: 10px 16px;
+    border-radius: 11px;
+  }
+
+  .hero__badge-num {
+    font-size: 1.2rem;
+  }
+
+  .hero__badge-label {
+    font-size: 0.74rem;
+  }
+
+  .hero__stitch {
+    width: 44vw;
+    opacity: 0.08;
   }
 }
 
-/* ===== iPad / smaller tablets ===== */
-@media (max-width: 900px) {
+/* ===== iPad Air landscape / iPad Pro 11\" portrait (834–1023px) ===== */
+@media (min-width: 834px) and (max-width: 1023px) {
+  .hero {
+    padding: clamp(44px, 5.5vw, 68px) 0;
+  }
+
   .hero__inner {
-    max-width: 100%;
-    padding: 0 clamp(20px, 4vw, 32px);
+    padding: 0 clamp(24px, 4vw, 40px);
     gap: 28px;
   }
 
   .hero__headline {
-    font-size: clamp(1.75rem, 5vw, 2.4rem);
+    font-size: clamp(2rem, 3.8vw, 2.55rem);
+    line-height: 1.17;
+    margin-bottom: 14px;
   }
 
   .hero__sub {
-    font-size: clamp(0.9rem, 1vw, 1rem);
+    font-size: clamp(0.94rem, 1.1vw, 1rem);
     line-height: 1.65;
-    margin-bottom: clamp(16px, 2.2vw, 22px);
+    margin-bottom: 18px;
+    max-width: 72ch;
   }
 
   .hero__notice-card {
-    padding: clamp(12px, 1.6vw, 16px) clamp(14px, 1.8vw, 18px);
+    padding: 14px 18px;
     gap: 12px;
+    max-width: 680px;
+  }
+
+  .hero__notice-text {
+    font-size: 0.9rem;
   }
 
   .hero__visual {
+    aspect-ratio: 16 / 7;
     max-height: 340px;
+    margin: 0 auto;
+    width: 100%;
+    border-radius: var(--radius-md);
   }
 
   .hero__badge {
-    padding: clamp(8px, 1.2vw, 12px) clamp(10px, 1.4vw, 14px);
+    padding: 9px 14px;
+    border-radius: 10px;
+  }
+
+  .hero__badge-num {
+    font-size: 1.05rem;
+  }
+
+  .hero__badge-label {
+    font-size: 0.7rem;
+  }
+
+  .hero__stitch {
+    width: 50vw;
+    opacity: 0.07;
   }
 }
 
-/* ===== Small tablets / large phones ===== */
+/* ===== iPad Air portrait / iPad Mini landscape (769–833px) ===== */
+@media (min-width: 769px) and (max-width: 833px) {
+  .hero {
+    padding: clamp(40px, 5vw, 60px) 0;
+  }
+
+  .hero__inner {
+    padding: 0 24px;
+    gap: 24px;
+  }
+
+  .hero__headline {
+    font-size: clamp(1.85rem, 4.2vw, 2.35rem);
+    line-height: 1.18;
+    margin-bottom: 12px;
+  }
+
+  .hero__sub {
+    font-size: 0.95rem;
+    line-height: 1.62;
+    margin-bottom: 16px;
+  }
+
+  .hero__notice-card {
+    padding: 13px 16px;
+    gap: 11px;
+  }
+
+  .hero__notice-text {
+    font-size: 0.87rem;
+  }
+
+  .hero__visual {
+    aspect-ratio: 16 / 7;
+    max-height: 300px;
+    margin: 0 auto;
+    width: 100%;
+    border-radius: var(--radius-sm);
+  }
+
+  .hero__badge {
+    padding: 8px 12px;
+    border-radius: 10px;
+  }
+
+  .hero__badge-num {
+    font-size: 1rem;
+  }
+
+  .hero__badge-label {
+    font-size: 0.68rem;
+  }
+
+  .hero__stitch {
+    width: 52vw;
+    opacity: 0.07;
+  }
+}
+
+/* ===== iPad Mini portrait / small tablets (≤768px) ===== */
 @media (max-width: 768px) {
   .hero {
     padding: clamp(32px, 4vw, 44px) 0;
   }
 
   .hero__inner {
+    grid-template-columns: 1fr;
     gap: 24px;
     padding: 0 clamp(16px, 3.5vw, 24px);
   }

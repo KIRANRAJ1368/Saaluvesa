@@ -1,27 +1,27 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import "./LanguageSelector.css";
 
 export const LANGUAGES = [
   { code: "en",    label: "English",    native: "English" },
-  { code: "ta",    label: "Tamil",      native: "\u0ba4\u0bae\u0bbf\u0bb4\u0bcd" },
-  { code: "hi",    label: "Hindi",      native: "\u0939\u093f\u0928\u094d\u0926\u0940" },
-  { code: "te",    label: "Telugu",     native: "\u0c24\u0c46\u0c32\u0c41\u0c17\u0c41" },
-  { code: "kn",    label: "Kannada",    native: "\u0c95\u0ca8\u0ccd\u0ca8\u0ca1" },
-  { code: "ml",    label: "Malayalam",  native: "\u0d2e\u0d32\u0d2f\u0d3e\u0d33\u0d02" },
-  { code: "mr",    label: "Marathi",    native: "\u092e\u0930\u093e\u0920\u0940" },
-  { code: "bn",    label: "Bengali",    native: "\u09ac\u09be\u0982\u09b2\u09be" },
-  { code: "gu",    label: "Gujarati",   native: "\u0a97\u0ac1\u0a9c\u0ab0\u0abe\u0aa4\u0ac0" },
-  { code: "pa",    label: "Punjabi",    native: "\u0a2a\u0a70\u0a1c\u0a3e\u0a2c\u0a40" },
-  { code: "ur",    label: "Urdu",       native: "\u0627\u0631\u062f\u0648" },
-  { code: "ar",    label: "Arabic",     native: "\u0627\u0644\u0639\u0631\u0628\u064a\u0629" },
-  { code: "fr",    label: "French",     native: "Fran\u00e7ais" },
+  { code: "ta",    label: "Tamil",      native: "தமிழ்" },
+  { code: "hi",    label: "Hindi",      native: "हिन्दी" },
+  { code: "te",    label: "Telugu",     native: "తెలుగు" },
+  { code: "kn",    label: "Kannada",    native: "ಕನ್ನಡ" },
+  { code: "ml",    label: "Malayalam",  native: "മലയാളം" },
+  { code: "mr",    label: "Marathi",    native: "मराठी" },
+  { code: "bn",    label: "Bengali",    native: "বাংলা" },
+  { code: "gu",    label: "Gujarati",   native: "ગુજરાતી" },
+  { code: "pa",    label: "Punjabi",    native: "ਪੰਜਾਬੀ" },
+  { code: "ur",    label: "Urdu",       native: "اردو" },
+  { code: "ar",    label: "Arabic",     native: "العربية" },
+  { code: "fr",    label: "French",     native: "Français" },
   { code: "de",    label: "German",     native: "Deutsch" },
-  { code: "es",    label: "Spanish",    native: "Espa\u00f1ol" },
-  { code: "zh-CN", label: "Chinese",    native: "\u4e2d\u6587" },
-  { code: "ja",    label: "Japanese",   native: "\u65e5\u672c\u8a9e" },
-  { code: "ko",    label: "Korean",     native: "\ud55c\uad6d\uc5b4" },
-  { code: "ru",    label: "Russian",    native: "\u0420\u0443\u0441\u0441\u043a\u0438\u0439" },
-  { code: "pt",    label: "Portuguese", native: "Portugu\u00eas" },
+  { code: "es",    label: "Spanish",    native: "Español" },
+  { code: "zh-CN", label: "Chinese",    native: "中文" },
+  { code: "ja",    label: "Japanese",   native: "日本語" },
+  { code: "ko",    label: "Korean",     native: "한국어" },
+  { code: "ru",    label: "Russian",    native: "Русский" },
+  { code: "pt",    label: "Portuguese", native: "Português" },
   { code: "it",    label: "Italian",    native: "Italiano" },
 ];
 
@@ -89,11 +89,13 @@ export function applyLanguage(langCode, retriesLeft = 15) {
 
 export default function LanguageSelector() {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(() => {
     const code = getSavedLanguageCode();
     return LANGUAGES.find((l) => l.code === code) || LANGUAGES[0];
   });
   const containerRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   // Sync state if language changes elsewhere
   useEffect(() => {
@@ -106,6 +108,17 @@ export default function LanguageSelector() {
     window.addEventListener("saalu_language_changed", handleLangChange);
     return () => window.removeEventListener("saalu_language_changed", handleLangChange);
   }, []);
+
+  // Focus search input on open, clear search on close
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 50);
+    } else {
+      setSearch("");
+    }
+  }, [open]);
 
   // Close on outside click
   useEffect(() => {
@@ -130,6 +143,18 @@ export default function LanguageSelector() {
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, [open]);
+
+  // Filtered languages by search term
+  const filteredLanguages = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return LANGUAGES;
+    return LANGUAGES.filter(
+      (lang) =>
+        lang.label.toLowerCase().includes(q) ||
+        lang.native.toLowerCase().includes(q) ||
+        lang.code.toLowerCase().includes(q)
+    );
+  }, [search]);
 
   // Handle language selection
   const handleSelect = useCallback((lang) => {
@@ -187,31 +212,102 @@ export default function LanguageSelector() {
       </button>
 
       {open && (
-        <ul
-          className="lang-selector__dropdown"
-          role="listbox"
-          aria-label="Language options"
-        >
-          {LANGUAGES.map((lang) => (
-            <li
-              key={lang.code}
-              role="option"
-              aria-selected={selected.code === lang.code}
-              className={`lang-selector__option${selected.code === lang.code ? " is-active" : ""}`}
-              onClick={() => handleSelect(lang)}
+        <div className="lang-selector__dropdown">
+          <div className="lang-selector__search-box">
+            <svg
+              className="lang-selector__search-icon"
+              viewBox="0 0 16 16"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M7.333 12.667A5.333 5.333 0 1 0 7.333 2a5.333 5.333 0 0 0 0 10.667ZM14 14l-2.9-2.9"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <input
+              ref={searchInputRef}
+              type="text"
+              className="lang-selector__search-input"
+              placeholder="Type language (e.g. Tamil, French, English...)"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
+                if (e.key === "Enter" && filteredLanguages.length === 1) {
                   e.preventDefault();
-                  handleSelect(lang);
+                  handleSelect(filteredLanguages[0]);
                 }
               }}
-              tabIndex={0}
-            >
-              <span className="lang-selector__option-native">{lang.native}</span>
-              <span className="lang-selector__option-en">{lang.label}</span>
-            </li>
-          ))}
-        </ul>
+              aria-label="Search language"
+            />
+            {search && (
+              <button
+                type="button"
+                className="lang-selector__search-clear"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSearch("");
+                  searchInputRef.current?.focus();
+                }}
+                aria-label="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <ul
+            className="lang-selector__list"
+            role="listbox"
+            aria-label="Language options"
+          >
+            {filteredLanguages.length > 0 ? (
+              filteredLanguages.map((lang) => (
+                <li
+                  key={lang.code}
+                  role="option"
+                  aria-selected={selected.code === lang.code}
+                  className={`lang-selector__option${selected.code === lang.code ? " is-active" : ""}`}
+                  onClick={() => handleSelect(lang)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleSelect(lang);
+                    }
+                  }}
+                  tabIndex={0}
+                >
+                  <span className="lang-selector__option-text">
+                    <span className="lang-selector__option-native">{lang.native}</span>
+                    <span className="lang-selector__option-secondary">({lang.label})</span>
+                  </span>
+                  {selected.code === lang.code && (
+                    <svg
+                      className="lang-selector__check"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M3.5 8.5L6.5 11.5L12.5 4.5"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                </li>
+              ))
+            ) : (
+              <li className="lang-selector__empty">No languages found</li>
+            )}
+          </ul>
+        </div>
       )}
     </div>
   );

@@ -21,19 +21,19 @@
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   /* Scale */
-  --fs-hero: clamp(2.2rem, 4vw, 3.8rem);
-  --fs-h2: clamp(1.65rem, 2.6vw, 2.5rem);
-  --fs-h3: clamp(1.15rem, 1.8vw, 1.35rem);
+  --fs-hero: clamp(1.85rem, 4.2vw, 3.8rem);
+  --fs-h2: clamp(1.5rem, 2.8vw, 2.5rem);
+  --fs-h3: clamp(1.1rem, 1.8vw, 1.35rem);
   --fs-body: 1rem;
   --fs-small: 0.875rem;
-  --fs-eyebrow: clamp(0.72rem, 1vw, 0.82rem);
+  --fs-eyebrow: clamp(0.7rem, 0.95vw, 0.82rem);
 
   /* Layout */
   --container: 1400px;
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
-  --gap-section: clamp(56px, 7vw, 100px);
+  --gap-section: clamp(44px, 6.5vw, 96px);
 
   /* Motion */
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -50,6 +50,18 @@ html {
   scroll-padding-top: 84px;
   -webkit-text-size-adjust: 100%;
   overflow-x: hidden;
+}
+
+@media (max-width: 960px) {
+  html {
+    scroll-padding-top: 76px;
+  }
+}
+
+@media (max-width: 540px) {
+  html {
+    scroll-padding-top: 62px;
+  }
 }
 
 body {

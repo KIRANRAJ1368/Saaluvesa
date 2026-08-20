@@ -79,13 +79,19 @@
   background: #07105b;
 }
 
+/* ===== Tablet: flexible 2-3 column grid ===== */
 @media (max-width: 960px) {
   .value-strip__grid {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 20px;
   }
+
+  .value-strip h2 {
+    font-size: clamp(1.4rem, 4vw, 1.8rem);
+  }
 }
 
+/* ===== Mobile: single column ===== */
 @media (max-width: 600px) {
   .value-strip__grid {
     grid-template-columns: 1fr;
@@ -94,5 +100,25 @@
 
   .value-card {
     padding: 20px 18px;
+  }
+
+  .value-strip h2 {
+    font-size: clamp(1.3rem, 5vw, 1.55rem);
+  }
+}
+
+/* ===== Small phones ===== */
+@media (max-width: 400px) {
+  .value-card {
+    padding: 18px 16px;
+    border-radius: var(--radius-sm);
+  }
+
+  .value-card h3 {
+    font-size: 1.05rem;
+  }
+
+  .value-card p {
+    font-size: 0.84rem;
   }
 }

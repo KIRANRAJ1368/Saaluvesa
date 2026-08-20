@@ -91,36 +91,117 @@
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  padding: 20px 0;
-  font-size: 0.84rem;
+  padding: 20px 0 24px;
+  font-size: 0.85rem;
   color: var(--color-ink-soft);
+  position: relative;
+  z-index: 1;
 }
 
-.site-footer__bottom strong {
+.site-footer__copy,
+.site-footer__dev {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1.5;
+}
+
+.site-footer__dev strong {
   color: var(--color-navy);
+  font-weight: 600;
 }
 
+/* ===== Tablet: 2-column grid ===== */
 @media (max-width: 1024px) {
   .site-footer__grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 32px;
+    gap: clamp(24px, 4vw, 36px);
   }
 }
 
-@media (max-width: 600px) {
-  .site-footer__grid {
-    grid-template-columns: 1fr;
-    gap: 24px;
+/* ===== Small tablets ===== */
+@media (max-width: 768px) {
+  .site-footer {
+    padding-top: 40px;
   }
 
-  .site-footer {
-    padding-top: 36px;
+  .site-footer__grid {
+    gap: 28px;
+    padding-bottom: 32px;
   }
 
   .site-footer__bottom {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    text-align: center;
     gap: 8px;
-    padding: 16px 0;
+    padding: 18px 0 22px;
+    font-size: 0.82rem;
+  }
+}
+
+/* ===== Mobile: single column ===== */
+@media (max-width: 540px) {
+  .site-footer {
+    padding-top: 32px;
+  }
+
+  .site-footer__grid {
+    grid-template-columns: 1fr;
+    gap: 22px;
+    padding-bottom: 24px;
+    text-align: center;
+  }
+
+  .site-footer__brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .site-footer__brand-row {
+    justify-content: center;
+  }
+
+  .site-footer__brand p {
+    max-width: 100%;
+    margin-top: 10px;
+    font-size: 0.84rem;
+    text-align: center;
+  }
+
+  .site-footer__col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .site-footer__col h4 {
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  .site-footer__col a,
+  .site-footer__col p {
+    font-size: 0.86rem;
+    line-height: 1.75;
+    text-align: center;
+  }
+
+  .site-footer__bottom {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+    padding: 16px 0 20px;
+    font-size: 0.78rem;
+  }
+}
+
+/* ===== Extra small mobile ===== */
+@media (max-width: 380px) {
+  .site-footer__bottom {
+    font-size: 0.74rem;
+    padding: 14px 0 18px;
   }
 }

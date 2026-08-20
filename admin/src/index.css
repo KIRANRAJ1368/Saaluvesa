@@ -17,8 +17,8 @@
   --color-line-on-navy: rgba(121, 246, 194, 0.25);
 
   /* Type */
-  --font-display: "Space Grotesk", "Segoe UI", sans-serif;
-  --font-body: "Inter", "Segoe UI", sans-serif;
+  --font-display: "Poppins", "Space Grotesk", "Segoe UI", sans-serif;
+  --font-body: "Poppins", "Inter", "Segoe UI", sans-serif;
 
   /* Scale */
   --fs-hero: clamp(2.5rem, 4.2vw, 3.8rem);

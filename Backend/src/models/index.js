@@ -21,6 +21,7 @@ export const Product = sequelize.define("Product", {
   description: { type: DataTypes.TEXT, allowNull: false },
   website_link: DataTypes.STRING,
   image: DataTypes.TEXT,
+  images: { type: DataTypes.TEXT, allowNull: true, defaultValue: null },
   display_order: {
     type: DataTypes.INTEGER,
     allowNull: false,

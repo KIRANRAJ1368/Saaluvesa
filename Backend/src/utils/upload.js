@@ -44,6 +44,22 @@ export const uploadImage = multer({
   },
 }).single("image");
 
+export const uploadImages = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    if (!ALLOWED_EXTENSIONS.has(ext) || !(file.mimetype || "").startsWith("image/")) {
+      return cb(
+        new ImageUploadError(
+          "Unsupported file type. Please upload JPG, PNG or WebP images only.",
+        ),
+      );
+    }
+    cb(null, true);
+  },
+}).array("images", 6);
+
 const PROTECTED_FILES = new Set([
   "product_custom.jpg",
   "product_plain.jpg",
@@ -55,8 +71,13 @@ const PROTECTED_FILES = new Set([
 ]);
 
 export function removeUploadedFile(imagePath) {
-  if (!imagePath || !imagePath.startsWith("/uploads/")) return;
-  const filename = path.basename(imagePath);
-  if (PROTECTED_FILES.has(filename)) return;
-  fs.unlink(path.join(uploadsDirectory, filename), () => {});
+  if (!imagePath) return;
+  const paths = Array.isArray(imagePath) ? imagePath : [imagePath];
+  for (const p of paths) {
+    if (!p || !p.startsWith("/uploads/")) continue;
+    const filename = path.basename(p);
+    if (PROTECTED_FILES.has(filename)) continue;
+    fs.unlink(path.join(uploadsDirectory, filename), () => {});
+  }
 }
+

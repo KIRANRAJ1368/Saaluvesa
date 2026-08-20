@@ -12,10 +12,8 @@ import { readImageMeta } from "../utils/image-meta.js";
 const router = Router();
 
 const IMAGE_RULES = {
-  minWidth: 800,
-  minHeight: 600,
-  targetRatio: 4 / 3,
-  tolerance: 0.02,
+  exactWidth: 800,
+  exactHeight: 600,
 };
 
 const slugify = (name) =>
@@ -25,19 +23,42 @@ const slugify = (name) =>
     .replace(/^-+|-+$/g, "")
     .slice(0, 60) || "product";
 
+/**
+ * Parse stored images JSON field into an array of strings.
+ * Returns [] if the field is missing or malformed.
+ */
+function parseImages(value) {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
+function serializeImageUrl(req, imagePath) {
+  if (!imagePath) return null;
+  if (/^https?:\/\//i.test(imagePath)) return imagePath;
+  const host = req.get("host");
+  if (!host) return imagePath;
+  const proto = req.headers["x-forwarded-proto"] || req.protocol || "http";
+  return `${proto}://${host}${imagePath.startsWith("/") ? "" : "/"}${imagePath}`;
+}
+
 function serialize(req, product) {
   const data = product.toJSON ? product.toJSON() : product;
-  let image = data.image || null;
-  if (image && !/^https?:\/\//i.test(image)) {
-    const host = req.get("host");
-    if (host) {
-      const proto = req.headers["x-forwarded-proto"] || req.protocol || "http";
-      image = `${proto}://${host}${image.startsWith("/") ? "" : "/"}${image}`;
-    }
-  }
+  const primaryImage = serializeImageUrl(req, data.image);
+  const storedImages = parseImages(data.images);
+  const allImages = storedImages.length
+    ? storedImages.map((img) => serializeImageUrl(req, img))
+    : primaryImage
+    ? [primaryImage]
+    : [];
   return {
     ...data,
-    image,
+    image: primaryImage,
+    images: allImages,
   };
 }
 
@@ -46,12 +67,8 @@ function checkImageFile(file) {
   if (!meta) {
     return "Could not read the image dimensions. Please upload a valid JPG, PNG or WebP image.";
   }
-  if (meta.width < IMAGE_RULES.minWidth || meta.height < IMAGE_RULES.minHeight) {
-    return `Image is too small (${meta.width}×${meta.height} px). Minimum size is ${IMAGE_RULES.minWidth}×${IMAGE_RULES.minHeight} px.`;
-  }
-  const ratio = meta.width / meta.height;
-  if (Math.abs(ratio - IMAGE_RULES.targetRatio) > IMAGE_RULES.tolerance) {
-    return `Image must use a 4:3 aspect ratio (yours is ${meta.width}×${meta.height}). Use e.g. 1200×900 or 1600×1200 px.`;
+  if (meta.width !== IMAGE_RULES.exactWidth || meta.height !== IMAGE_RULES.exactHeight) {
+    return `Image must be exactly ${IMAGE_RULES.exactWidth} × ${IMAGE_RULES.exactHeight} pixels (selected image is ${meta.width} × ${meta.height} px).`;
   }
   return null;
 }
@@ -80,14 +97,10 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-// Fetching a single product is used by the public product-details page.  Keep
-// this lookup on the server so newly created products do not depend on a
-// client-side search through the whole catalogue.
+// Fetching a single product is used by the public product-details page.
 router.get("/:identifier", async (req, res, next) => {
   try {
     const { identifier } = req.params;
-    // Product IDs are numeric today, but accepting an ID as well makes public
-    // links resilient if a slug is changed later.
     const product = /^\d+$/.test(identifier)
       ? await Product.findByPk(Number(identifier))
       : await Product.findOne({ where: { slug: identifier } });
@@ -124,18 +137,23 @@ admin.post(
       if (!req.file) {
         return res.status(422).json({
           message:
-            "A product image is required. Upload a JPG, PNG or WebP image (4:3, min 800×600 px).",
+            "A product image is required. Please upload an image with exactly 800 × 600 pixels.",
         });
       }
+
       const imageMessage = checkImageFile(req.file);
       if (imageMessage) {
         fs.unlink(req.file.path, () => {});
         return res.status(422).json({ message: imageMessage });
       }
+
       const displayOrder = getDisplayOrder(req.body.display_order);
       if (displayOrder === null) {
+        fs.unlink(req.file.path, () => {});
         return res.status(422).json({ message: "Display order must be a whole number of zero or greater." });
       }
+
+      const imagePath = `/uploads/${req.file.filename}`;
       const product = await Product.create({
         name: req.body.name,
         description: req.body.description,
@@ -143,7 +161,8 @@ admin.post(
         display_order: displayOrder,
         is_active: getActiveState(req.body.is_active),
         slug: slugify(req.body.name),
-        image: `/uploads/${req.file.filename}`,
+        image: imagePath,
+        images: JSON.stringify([imagePath]),
       });
       res.status(201).json(serialize(req, product));
     } catch (e) {
@@ -169,26 +188,30 @@ admin.put(
         }
       }
 
+      const displayOrder = getDisplayOrder(req.body.display_order);
+      if (displayOrder === null) {
+        if (req.file) fs.unlink(req.file.path, () => {});
+        return res.status(422).json({ message: "Display order must be a whole number of zero or greater." });
+      }
+
       const updates = {
         name: req.body.name,
         description: req.body.description,
         website_link: req.body.website_link || null,
+        display_order: displayOrder,
+        is_active: getActiveState(req.body.is_active),
       };
 
-      const displayOrder = getDisplayOrder(req.body.display_order);
-      if (displayOrder === null) {
-        return res.status(422).json({ message: "Display order must be a whole number of zero or greater." });
-      }
-      updates.display_order = displayOrder;
-      updates.is_active = getActiveState(req.body.is_active);
-
       if (req.file) {
-        updates.image = `/uploads/${req.file.filename}`;
+        const previousImage = product.image;
+        const newImagePath = `/uploads/${req.file.filename}`;
+        updates.image = newImagePath;
+        updates.images = JSON.stringify([newImagePath]);
+        await product.update(updates);
+        if (previousImage) removeUploadedFile(previousImage);
+      } else {
+        await product.update(updates);
       }
-
-      const previousImage = product.image;
-      await product.update(updates);
-      if (req.file) removeUploadedFile(previousImage);
 
       res.json(serialize(req, product));
     } catch (e) {
@@ -201,9 +224,10 @@ admin.delete("/:id", async (req, res, next) => {
   try {
     const product = await Product.findByPk(req.params.id);
     if (!product) return res.status(404).json({ message: "Product not found" });
-    const previousImage = product.image;
+    const allImages = parseImages(product.images);
+    const imagesToDelete = allImages.length ? allImages : [product.image];
     await product.destroy();
-    removeUploadedFile(previousImage);
+    removeUploadedFile(imagesToDelete);
     res.status(204).end();
   } catch (e) {
     next(e);

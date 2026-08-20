@@ -24,10 +24,8 @@ const SITE_IMAGES = [
 ];
 
 const IMAGE_RULES = {
-  minWidth: 800,
-  minHeight: 600,
-  ratio: 4 / 3,
-  tolerance: 0.02,
+  exactWidth: 800,
+  exactHeight: 600,
   types: ["image/jpeg", "image/png", "image/webp"],
 };
 
@@ -47,15 +45,9 @@ function validateImageFile(file) {
       const h = img.naturalHeight;
       URL.revokeObjectURL(url);
       if (!w || !h) return resolve("This file could not be read as an image.");
-      if (w < IMAGE_RULES.minWidth || h < IMAGE_RULES.minHeight) {
+      if (w !== IMAGE_RULES.exactWidth || h !== IMAGE_RULES.exactHeight) {
         return resolve(
-          `Image is too small (${w}×${h} px). Minimum size is ${IMAGE_RULES.minWidth}×${IMAGE_RULES.minHeight} px.`,
-        );
-      }
-      const ratio = w / h;
-      if (Math.abs(ratio - IMAGE_RULES.ratio) > IMAGE_RULES.tolerance) {
-        return resolve(
-          `Image must use a 4:3 aspect ratio (yours is ${w}×${h}, ratio ${ratio.toFixed(2)}). Use e.g. 1200×900 or 1600×1200 px.`,
+          `Image must be exactly 800 × 600 pixels (selected image is ${w} × ${h} px).`,
         );
       }
       resolve(null);
@@ -472,6 +464,7 @@ function Shell() {
     { to: "/", label: "Overview", icon: "dashboard", end: true },
     { to: "/products", label: "Products", icon: "package" },
     { to: "/export-documents", label: "Export documents", icon: "file-text" },
+    { to: "/contacts", label: "Contacts", icon: "mail" },
   ];
 
   return (
@@ -666,18 +659,34 @@ function Dashboard() {
 
 function ProductDetailDrawer({ product, onClose }) {
   if (!product) return null;
+  const imgs = Array.isArray(product.images) && product.images.length > 0
+    ? product.images
+    : product.image
+    ? [product.image]
+    : [];
 
   return (
     <div className="admin-product-view">
-      {/* 1. Product Image */}
+      {/* 1. Product Images Gallery */}
       <div className="admin-product-view__media">
-        {product.image ? (
-          <div className="admin-product-view__image-wrap">
-            <img
-              src={product.image}
-              alt={product.name}
-              className="admin-product-view__image"
-            />
+        {imgs.length > 0 ? (
+          <div className="admin-product-view__gallery">
+            <div className="admin-product-view__image-wrap">
+              <img
+                src={imgs[0]}
+                alt={product.name}
+                className="admin-product-view__image"
+              />
+            </div>
+            {imgs.length > 1 && (
+              <div className="admin-product-view__thumbs">
+                {imgs.map((src, i) => (
+                  <div className="admin-product-view__thumb" key={i}>
+                    <img src={src} alt="" />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <div className="admin-product-view__placeholder">
@@ -687,9 +696,15 @@ function ProductDetailDrawer({ product, onClose }) {
         )}
       </div>
 
-      {/* 2. Product Title & Description */}
+      {/* 2. Product Title & Info */}
       <div className="admin-product-view__body">
         <div className="admin-product-view__header">
+          <div className="admin-product-view__meta-pills">
+            <Badge tone={product.is_active ? "mint" : "gray"}>
+              {product.is_active ? "Active" : "Inactive"}
+            </Badge>
+            <span className="admin-product-view__order-pill">Order #{product.display_order ?? 0}</span>
+          </div>
           <h3 className="admin-product-view__title">{product.name}</h3>
         </div>
 
@@ -706,6 +721,21 @@ function ProductDetailDrawer({ product, onClose }) {
             )}
           </div>
         </div>
+
+        {product.website_link && (
+          <div className="admin-product-view__link-card">
+            <span className="admin-product-view__link-label">Website Link</span>
+            <a
+              href={product.website_link}
+              target="_blank"
+              rel="noreferrer"
+              className="admin-product-view__link"
+            >
+              <Icon name="external-link" size={14} />
+              {product.website_link}
+            </a>
+          </div>
+        )}
       </div>
 
       {/* 3. Actions */}
@@ -882,12 +912,14 @@ function ProductsAdmin() {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState(null);
+  const [formError, setFormError] = useState("");
+
+  // Single-image state (exactly 1 image required, 800 × 600 px)
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
-  const [imageError, setImageError] = useState("");
   const [currentImage, setCurrentImage] = useState("");
-  const [siteChoice, setSiteChoice] = useState(null);
-  const [formError, setFormError] = useState("");
+  const [imageError, setImageError] = useState("");
+  const [imageRemovedNotice, setImageRemovedNotice] = useState("");
 
   const load = () => {
     setLoading(true);
@@ -906,11 +938,12 @@ function ProductsAdmin() {
   );
 
   const resetImageState = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
     setImageFile(null);
     setImagePreview("");
-    setImageError("");
     setCurrentImage("");
-    setSiteChoice(null);
+    setImageError("");
+    setImageRemovedNotice("");
     setFormError("");
   };
 
@@ -923,34 +956,41 @@ function ProductsAdmin() {
   const openEdit = (p) => {
     setEditing(p);
     resetImageState();
-    setCurrentImage(p.image || "");
+    const existing = p.image || (Array.isArray(p.images) && p.images[0]) || "";
+    setCurrentImage(existing);
     setOpen(true);
   };
 
+  /** Handle single image file picked via file input */
   const handleImageFile = async (e) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
     setImageError("");
-    setSiteChoice(null);
-    const message = await validateImageFile(file);
-    if (message) {
-      setImageError(message);
-      setImagePreview("");
+    setImageRemovedNotice("");
+
+    const error = await validateImageFile(file);
+    if (error) {
+      setImageError(error);
       setImageFile(null);
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+      setImagePreview("");
       return;
     }
+
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
-    setCurrentImage("");
   };
 
-  const handleSiteChoice = (choice) => {
-    setImageError("");
+  /** Remove current or newly selected image */
+  const removeImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
     setImageFile(null);
-    setImagePreview(choice.src);
+    setImagePreview("");
     setCurrentImage("");
-    setSiteChoice(choice);
+    setImageRemovedNotice("Product image removed. Please upload an image with exactly 800 × 600 pixels.");
+    setImageError("");
   };
 
   const save = async (e) => {
@@ -969,31 +1009,23 @@ function ProductsAdmin() {
       return setFormError("Display order must be a whole number of zero or greater.");
     }
 
+    if (!imageFile && !currentImage) {
+      return setImageError("A product image is required. Please upload an image with exactly 800 × 600 pixels.");
+    }
+
+    if (imageFile) {
+      const error = await validateImageFile(imageFile);
+      if (error) return setImageError(error);
+    }
+
     const payload = new FormData();
     payload.append("name", name);
     payload.append("description", description);
     payload.append("display_order", display_order);
     payload.append("is_active", String(is_active));
     if (website_link) payload.append("website_link", website_link);
-
     if (imageFile) {
-      const message = await validateImageFile(imageFile);
-      if (message) return setImageError(message);
       payload.append("image", imageFile, imageFile.name);
-    } else if (siteChoice) {
-      try {
-        const blob = await (await fetch(siteChoice.src)).blob();
-        payload.append(
-          "image",
-          new File([blob], siteChoice.file, { type: blob.type || "image/jpeg" }),
-        );
-      } catch (_err) {
-        return setImageError("Could not use that image. Please try uploading it instead.");
-      }
-    } else if (!editing) {
-      return setImageError(
-        "A product image is required. Upload a 4:3 image or choose an existing website image.",
-      );
     }
 
     setSaving(true);
@@ -1024,7 +1056,7 @@ function ProductsAdmin() {
     setBusyId(p.id);
     try {
       await api(`/admin/products/${p.id}`, { method: "DELETE" });
-      pushToast("success", "Product deleted");
+      pushToast("error", `Product "${p.name}" deleted from catalogue`);
       load();
     } catch (err) {
       pushToast("error", err.message || "Could not delete product");
@@ -1040,20 +1072,21 @@ function ProductsAdmin() {
           <p className="admin-eyebrow">Catalogue</p>
           <h2>Products</h2>
         </div>
-        <p>Add and maintain the products, images and details visible to your customers.</p>
+        <div className="admin-page-heading__actions">
+          <button
+            className="admin-btn admin-btn--primary"
+            onClick={openAdd}
+          >
+            <Icon name="plus" size={17} />
+            Add product
+          </button>
+        </div>
       </div>
 
       <div className="admin-toolbar">
         <span className="admin-toolbar__count">
           {filtered.length} {filtered.length === 1 ? "product" : "products"}
         </span>
-        <button
-          className="admin-btn admin-btn--primary"
-          onClick={openAdd}
-        >
-          <Icon name="plus" size={17} />
-          Add product
-        </button>
       </div>
 
       {loading ? (
@@ -1112,7 +1145,7 @@ function ProductsAdmin() {
                       <div className="row-actions">
                         <button
                           className="admin-icon-btn admin-icon-btn--soft"
-                          title="View"
+                          title="View details"
                           onClick={(e) => {
                             e.stopPropagation();
                             setViewing(p);
@@ -1122,7 +1155,7 @@ function ProductsAdmin() {
                         </button>
                         <button
                           className="admin-icon-btn admin-icon-btn--soft"
-                          title="Edit"
+                          title="Edit product"
                           onClick={(e) => {
                             e.stopPropagation();
                             openEdit(p);
@@ -1132,7 +1165,7 @@ function ProductsAdmin() {
                         </button>
                         <button
                           className="admin-icon-btn admin-icon-btn--danger"
-                          title="Delete"
+                          title="Delete product"
                           onClick={(e) => {
                             e.stopPropagation();
                             remove(p);
@@ -1172,153 +1205,174 @@ function ProductsAdmin() {
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title={editing ? "Edit product" : "Add product"}
-        sub={editing ? `Updating “${editing.name}”` : "Create a new catalogue entry"}
+        title={editing ? "Edit Product" : "Add New Product"}
+        sub={editing ? `Update details and image for “${editing.name}”` : "Fill in the details below to add a product to the catalogue"}
         wide
       >
-        <form onSubmit={save} className="admin-form admin-form--product">
-          {/* Section: Basic Information */}
-          <fieldset className="admin-form-section">
-            <legend className="admin-form-section__title">
-              <Icon name="pencil" size={15} />
-              Basic information
-            </legend>
+        <form onSubmit={save} className="admin-form admin-product-form">
+          {/* Product Fields */}
+          <div className="admin-form-grid">
+            <div className="admin-field admin-field--full">
+              <label htmlFor="p-name">
+                Product Name <span className="admin-req">*</span>
+              </label>
+              <input
+                id="p-name"
+                name="name"
+                placeholder="e.g. Custom Printed T-Shirts"
+                defaultValue={editing?.name}
+                required
+                autoFocus
+                onChange={() => formError && setFormError("")}
+              />
+            </div>
 
-            <div className="admin-form-grid">
-              <div className="admin-field admin-field--full">
-                <label htmlFor="p-name">Product name <span>required</span></label>
+            <div className="admin-field admin-field--full">
+              <label htmlFor="p-desc">
+                Description <span className="admin-req">*</span>
+              </label>
+              <textarea
+                id="p-desc"
+                name="description"
+                placeholder="Describe the product — materials, print techniques, sizing, export quality..."
+                defaultValue={editing?.description}
+                required
+                rows={4}
+                onChange={() => formError && setFormError("")}
+              />
+            </div>
+
+            <div className="admin-field">
+              <label htmlFor="p-display-order">
+                Display Order
+              </label>
+              <input
+                id="p-display-order"
+                name="display_order"
+                type="number"
+                min="0"
+                step="1"
+                defaultValue={editing?.display_order ?? 0}
+                required
+              />
+            </div>
+
+            <div className="admin-field">
+              <label htmlFor="p-active">Catalogue Visibility</label>
+              <label className="admin-toggle-card" htmlFor="p-active">
                 <input
-                  id="p-name"
-                  name="name"
-                  placeholder="e.g. Custom Printed T-Shirts"
-                  defaultValue={editing?.name}
-                  required
-                  autoFocus
-                  onChange={() => formError && setFormError("")}
+                  id="p-active"
+                  name="is_active"
+                  type="checkbox"
+                  value="true"
+                  defaultChecked={editing?.is_active ?? true}
                 />
-              </div>
+                <div className="admin-toggle-card__switch">
+                  <span className="admin-toggle-card__slider" />
+                </div>
+                <div className="admin-toggle-card__content">
+                  <strong>Active on Website</strong>
+                  <small>Visible in public catalogue & products list</small>
+                </div>
+              </label>
+            </div>
+          </div>
 
-              <div className="admin-field admin-field--full">
-                <label htmlFor="p-desc">Description <span>required</span></label>
-                <textarea
-                  id="p-desc"
-                  name="description"
-                  placeholder="Describe the product — materials, use cases, finish, available sizes…"
-                  defaultValue={editing?.description}
-                  required
-                  rows={4}
-                  onChange={() => formError && setFormError("")}
-                />
+          {/* Card 2: Single Product Image */}
+          <div className="admin-form-card">
+            <div className="admin-form-card__head">
+              <div className="admin-form-card__icon">
+                <Icon name="image" size={18} />
               </div>
-
-              <div className="admin-field">
-                <label htmlFor="p-display-order">Display order</label>
-                <input
-                  id="p-display-order"
-                  name="display_order"
-                  type="number"
-                  min="0"
-                  step="1"
-                  defaultValue={editing?.display_order ?? 0}
-                  required
-                />
-                <small>Lower numbers appear first on the frontend.</small>
-              </div>
-
-              <div className="admin-field">
-                <label htmlFor="p-active">Visibility</label>
-                <label className="admin-check-row" htmlFor="p-active">
-                  <input
-                    id="p-active"
-                    name="is_active"
-                    type="checkbox"
-                    value="true"
-                    defaultChecked={editing?.is_active ?? true}
-                  />
-                  <span>Active — show this product on the frontend</span>
-                </label>
+              <div className="admin-form-card__head-text">
+                <div className="admin-form-card__title-row">
+                  <h3 className="admin-form-card__title">Product Image <span className="admin-req">*</span></h3>
+                  <span className="admin-badge-count">Exactly 800 × 600 px</span>
+                </div>
+                <p className="admin-form-card__desc">Upload an image with exactly 800 × 600 pixels (JPG, PNG or WebP)</p>
               </div>
             </div>
-          </fieldset>
 
-          {/* Section: Product Image */}
-          <fieldset className="admin-form-section">
-            <legend className="admin-form-section__title">
-              <Icon name="image" size={15} />
-              Product image
-            </legend>
-
-            <div className="admin-image-picker">
-              <div className={`admin-image-picker__preview${imagePreview || currentImage ? "" : " is-empty"}`}>
-                {imagePreview ? (
-                  <img src={imagePreview} alt="Selected product image preview" />
-                ) : currentImage ? (
-                  <>
-                    <img src={currentImage} alt="Current product image" />
-                    <span className="admin-image-picker__keep">Current image</span>
-                  </>
-                ) : (
-                  <div className="admin-image-picker__placeholder">
-                    <Icon name="image" size={32} />
-                    <span>No image selected</span>
-                    <small>Upload to see a preview here</small>
-                  </div>
-                )}
-              </div>
-
-              <div className="admin-image-picker__controls">
-                <label className={`admin-upload-box${imageFile ? " is-selected" : ""}`}>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={handleImageFile}
-                  />
-                  <div className="admin-upload-box__icon">
-                    <Icon name="upload" size={20} />
-                  </div>
-                  <span>
-                    <strong>{imageFile ? "Change image" : "Upload product image"}</strong>
-                    <small>JPG, PNG or WebP — 4:3 ratio — min 800 × 600 px</small>
+            {/* Single image preview if an image is selected/existing */}
+            {(imagePreview || currentImage) ? (
+              <div className="admin-single-image-preview">
+                <div className="admin-single-image-thumb">
+                  <img src={imagePreview || currentImage} alt="Product preview" />
+                  <span className="admin-single-image-badge">
+                    {imagePreview ? "Selected (800 × 600 px)" : "Current Image (800 × 600 px)"}
                   </span>
-                </label>
+                  <button
+                    type="button"
+                    className="admin-single-image-remove"
+                    title="Remove this image"
+                    onClick={removeImage}
+                    aria-label="Remove image"
+                  >
+                    <Icon name="trash" size={14} />
+                    <span>Remove image</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Upload Dropzone (Single file) */
+              <label className="admin-upload-dropzone">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageFile}
+                />
+                <div className="admin-upload-dropzone__icon">
+                  <Icon name="upload" size={22} />
+                </div>
+                <div className="admin-upload-dropzone__text">
+                  <strong>Click or browse to upload product image</strong>
+                  <span>Requires exactly 800 × 600 pixels · JPG, PNG or WebP · 1 image only</span>
+                </div>
+              </label>
+            )}
 
-                {imageFile && (
-                  <p className="admin-image-meta">
-                    <Icon name="check" size={14} />
-                    <span>{imageFile.name} ({(imageFile.size / 1024).toFixed(0)} KB)</span>
-                  </p>
-                )}
+            {imageError && (
+              <div className="admin-image-error-box" role="alert">
+                <Icon name="alert" size={16} />
+                <span>{imageError}</span>
+              </div>
+            )}
 
-                {imageError && (
-                  <p className="admin-field-error" role="alert">
-                    <Icon name="alert" size={14} />
-                    {imageError}
-                  </p>
-                )}
+            {imageRemovedNotice && (
+              <div className="admin-image-removed-box" role="alert">
+                <Icon name="trash" size={16} />
+                <span>{imageRemovedNotice}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Card 3: Additional Details */}
+          <div className="admin-form-card">
+            <div className="admin-form-card__head">
+              <div className="admin-form-card__icon">
+                <Icon name="external-link" size={18} />
+              </div>
+              <div className="admin-form-card__head-text">
+                <h3 className="admin-form-card__title">
+                  Website Link <span className="admin-optional">(Optional)</span>
+                </h3>
+                <p className="admin-form-card__desc">Direct link to an order or external product page</p>
               </div>
             </div>
-          </fieldset>
-
-          {/* Section: Additional Details */}
-          <fieldset className="admin-form-section">
-            <legend className="admin-form-section__title">
-              <Icon name="external-link" size={15} />
-              Additional details
-            </legend>
 
             <div className="admin-form-grid">
               <div className="admin-field admin-field--full">
-                <label htmlFor="p-link">Website link <span>optional</span></label>
+                <label htmlFor="p-link">Website Link</label>
                 <input
                   id="p-link"
                   name="website_link"
                   type="url"
-                  placeholder="https://example.com/product-page"
+                  placeholder="https://castbull.co.in/custom-tshirts"
                   defaultValue={editing?.website_link}
                 />
               </div>
             </div>
-          </fieldset>
+          </div>
 
           {formError && (
             <p className="admin-field-error admin-form__error" role="alert">
@@ -1333,7 +1387,7 @@ function ProductsAdmin() {
             </button>
             <button type="submit" className="admin-btn admin-btn--primary" disabled={saving}>
               {saving ? <Spinner size={16} /> : <Icon name="check" size={16} />}
-              {editing ? "Save changes" : "Add product"}
+              {editing ? "Save Changes" : "Create Product"}
             </button>
           </div>
         </form>
@@ -1682,6 +1736,7 @@ export default function Admin() {
             <Route index element={<Dashboard />} />
             <Route path="products" element={<ProductsAdmin />} />
             <Route path="export-documents" element={<ExportDocuments />} />
+            <Route path="contacts" element={<Contacts />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

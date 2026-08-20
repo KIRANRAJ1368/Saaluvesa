@@ -1,11 +1,11 @@
-﻿import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import "./Header.css";
 import logo from "../assets/logo.jpeg";
 import LanguageSelector from "./LanguageSelector";
 
 const NAV_LINKS = [
-  { label: "Home", href: "/#home" },
+  { label: "Home", to: "/#home" },
   { label: "About", to: "/about" },
   { label: "Products", to: "/products" },
   { label: "Contact Us", to: "/contact" },
@@ -14,6 +14,8 @@ const NAV_LINKS = [
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const savedScrollY = useRef(0);
+  const navigatingRef = useRef(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -31,16 +33,34 @@ export default function Header() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [menuOpen]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (menuOpen) {
+      savedScrollY.current = window.scrollY;
+      document.body.style.top = `-${savedScrollY.current}px`;
       document.body.classList.add("menu-open");
+      document.documentElement.classList.add("menu-open");
     } else {
       document.body.classList.remove("menu-open");
+      document.documentElement.classList.remove("menu-open");
+      document.body.style.top = "";
+      if (!navigatingRef.current) {
+        window.scrollTo(0, savedScrollY.current || 0);
+      }
+      navigatingRef.current = false;
     }
-    return () => document.body.classList.remove("menu-open");
+    return () => {
+      document.body.classList.remove("menu-open");
+      document.documentElement.classList.remove("menu-open");
+      document.body.style.top = "";
+    };
   }, [menuOpen]);
 
   const closeMenu = () => setMenuOpen(false);
+
+  const handleNavigate = () => {
+    navigatingRef.current = true;
+    setMenuOpen(false);
+  };
 
   const renderLink = (link, onClick) =>
     link.to ? (
@@ -57,7 +77,7 @@ export default function Header() {
     <div className="header-wrapper">
       <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
         <div className="wrap site-header__row">
-          <Link to="/" className="brand" aria-label="Saaluvesa Home" onClick={closeMenu}>
+          <Link to="/" className="brand" aria-label="Saaluvesa Home" onClick={handleNavigate}>
             <img className="brand__logo" src={logo} alt="Saaluvesa" />
             <span className="brand__text">
               SAALU<span>VESA</span>
@@ -102,7 +122,7 @@ export default function Header() {
 
         {menuOpen && (
           <nav id="mobile-nav" className="site-nav--mobile" aria-label="Mobile">
-            {NAV_LINKS.map((link) => renderLink(link, closeMenu))}
+            {NAV_LINKS.map((link) => renderLink(link, handleNavigate))}
             <a
               href="https://castbull.co.in/"
               target="_blank"

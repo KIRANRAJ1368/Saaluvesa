@@ -1,16 +1,14 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import "./Footer.css";
-import useScrollAnimation from "../hooks/useScrollAnimation";
 import logo from "../assets/logo.jpeg";
 
 export default function Footer() {
   const year = new Date().getFullYear();
-  const animRef = useScrollAnimation();
 
   return (
-    <footer className="site-footer" ref={animRef}>
-      <div className="wrap site-footer__grid" data-animate="fade-up">
+    <footer className="site-footer">
+      <div className="wrap site-footer__grid">
         <div className="site-footer__brand">
           <div className="site-footer__brand-row">
             <img className="brand__logo" src={logo} alt="Saaluvesa" />
@@ -19,7 +17,7 @@ export default function Footer() {
             </span>
           </div>
           <p>
-            Saaluvesa Enterprises Pvt Ltd — Premier custom apparel manufacturing, textile production, and global export solutions.
+            Saaluvesa Enterprises Private Limited — Premier custom apparel manufacturing, textile production, and global export solutions.
           </p>
         </div>
 
@@ -52,10 +50,12 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="wrap site-footer__bottom delay-1" data-animate="fade-up">
-        <span>Copyright © {year} Saaluvesa Enterprises Pvt Ltd</span>
-        <span>
-          Developed By <strong>Sai Techno Solutions</strong>
+      <div className="wrap site-footer__bottom">
+        <span className="site-footer__copy">
+          Copyright &copy; {year} Saaluvesa Enterprises Private Limited.
+        </span>
+        <span className="site-footer__dev">
+          Developed by <strong>Sai Techno Solutions</strong>
         </span>
       </div>
     </footer>

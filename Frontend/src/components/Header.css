@@ -5,22 +5,6 @@
   width: 100%;
 }
 
-/* ── Language selector placement ─────────────────────── */
-/* Desktop: sits between the nav and the CTA button */
-.site-header__lang-desktop {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-/* Mobile/tablet: hidden on desktop, shown next to hamburger */
-.site-header__lang-mobile {
-  display: none;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-
 .site-header {
   position: relative;
   background: rgba(5, 10, 60, 0.9);
@@ -138,6 +122,19 @@
   transform: translateY(0);
 }
 
+/* Language selector placement */
+.site-header__lang-desktop {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.site-header__lang-mobile {
+  display: none;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 /* Hamburger toggle button */
 .nav-toggle {
   display: none;
@@ -190,20 +187,17 @@
 }
 
 /* Lock body scroll when mobile menu is open */
+html.menu-open {
+  overflow: hidden;
+}
+
 body.menu-open {
   overflow: hidden;
-  position: fixed;
+  position: fixed !important;
   width: 100%;
 }
 
-/* ============================================
-   RESPONSIVE BREAKPOINTS
-   iPad Pro 12.9" : 1024px (portrait) / 1366px (landscape)
-   iPad Pro 11"   : 834px  (portrait) / 1194px (landscape)
-   iPad Air       : 820px  (portrait) / 1180px (landscape)
-   ============================================ */
-
-/* ===== iPad Pro landscape / tight desktop: compact nav spacing ===== */
+/* ===== iPad Pro landscape / tight desktop ===== */
 @media (max-width: 1200px) {
   .site-header__row {
     gap: clamp(12px, 2vw, 24px);
@@ -224,13 +218,12 @@ body.menu-open {
   }
 }
 
-/* ===== iPad portrait / small tablets: show hamburger ===== */
+/* ===== Tablet & below: hamburger mode ===== */
 @media (max-width: 960px) {
   .site-nav {
     display: none;
   }
 
-  /* Hide desktop lang selector, show mobile one */
   .site-header__lang-desktop {
     display: none;
   }
@@ -241,15 +234,11 @@ body.menu-open {
   }
 
   .site-header__cta {
-    display: inline-flex;
-    margin-left: 0;
-    padding: 8px 16px;
-    font-size: 0.84rem;
-    min-height: 38px;
+    display: none;
   }
 
   .brand {
-    margin-right: 12px;
+    margin-right: auto;
   }
 
   .nav-toggle {
@@ -301,6 +290,10 @@ body.menu-open {
     justify-content: center;
     border-bottom: none !important;
     min-height: 44px;
+    color: var(--color-navy-deep) !important;
+    background: var(--color-mint);
+    font-weight: 700;
+    font-size: 0.9rem;
   }
 }
 
@@ -314,12 +307,6 @@ body.menu-open {
 
   .brand {
     gap: 10px;
-  }
-
-  .site-header__cta {
-    padding: 7px 14px;
-    font-size: 0.8rem;
-    min-height: 36px;
   }
 
   .site-nav--mobile {
@@ -344,7 +331,6 @@ body.menu-open {
 
   .brand {
     gap: 8px;
-    margin-right: auto;
   }
 
   .brand__text {
@@ -354,12 +340,6 @@ body.menu-open {
   .brand__logo {
     width: 30px;
     height: 30px;
-  }
-
-  .site-header__cta {
-    padding: 6px 12px;
-    font-size: 0.76rem;
-    min-height: 34px;
   }
 
   .nav-toggle {
@@ -387,6 +367,8 @@ body.menu-open {
   .site-nav--mobile-cta {
     max-width: 100%;
     margin-top: 12px;
+    color: var(--color-navy-deep) !important;
+    background: var(--color-mint);
   }
 }
 
@@ -404,12 +386,6 @@ body.menu-open {
   .brand__logo {
     width: 28px;
     height: 28px;
-  }
-
-  .site-header__cta {
-    padding: 5px 10px;
-    font-size: 0.72rem;
-    min-height: 32px;
   }
 
   .nav-toggle {

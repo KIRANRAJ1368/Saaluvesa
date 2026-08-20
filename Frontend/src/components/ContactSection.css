@@ -115,7 +115,7 @@
 .contact-form input,
 .contact-form textarea {
   font-family: var(--font-body);
-  font-size: 1rem; /* 16px prevents iOS Safari automatic zoom on focus */
+  font-size: 1rem;
   font-weight: 400;
   color: var(--color-ink);
   border: 1.5px solid var(--color-line);
@@ -160,7 +160,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* decorative glow behind icon */
 .contact-form__success-glow {
   position: absolute;
   top: 28px;
@@ -179,7 +178,6 @@
   50%      { opacity: 1;   transform: translateX(-50%) scale(1.15); }
 }
 
-/* animated checkmark circle */
 .contact-form__success-icon {
   position: relative;
   width: clamp(56px, 8vw, 72px);
@@ -269,13 +267,19 @@
   line-height: 1.35;
 }
 
+/* ===== Tablet: stack grid ===== */
 @media (max-width: 960px) {
   .contact-section__grid {
     grid-template-columns: 1fr;
     gap: 40px;
   }
+
+  .contact-section h2 {
+    font-size: clamp(1.4rem, 4vw, 1.8rem);
+  }
 }
 
+/* ===== Small tablets: stack form rows ===== */
 @media (max-width: 640px) {
   .contact-form__row {
     grid-template-columns: 1fr;
@@ -289,5 +293,36 @@
   .contact-form__submit {
     width: 100%;
     justify-content: center;
+  }
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 540px) {
+  .contact-section h2 {
+    font-size: clamp(1.3rem, 5vw, 1.55rem);
+  }
+
+  .contact-section__info > p {
+    font-size: 0.9rem;
+  }
+
+  .contact-section__block p {
+    font-size: 0.88rem;
+  }
+}
+
+/* ===== Small phones ===== */
+@media (max-width: 400px) {
+  .contact-form {
+    padding: 18px 14px;
+    border-radius: var(--radius-sm);
+  }
+
+  .contact-section__block {
+    padding-top: 14px;
+  }
+
+  .contact-section h2 {
+    font-size: 1.25rem;
   }
 }

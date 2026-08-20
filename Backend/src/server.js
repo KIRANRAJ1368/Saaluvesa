@@ -10,6 +10,7 @@ import auth from "./routes/auth.js";
 import { publicProducts, adminProducts } from "./routes/products.js";
 import { publicContact } from "./routes/contact.js";
 import exportDocuments from "./routes/export-documents.js";
+import adminContactSubmissions from "./routes/admin-contact-submissions.js";
 const app = express();
 
 app.use(cors({ origin: process.env.CLIENT_ORIGIN?.split(",") || true }));
@@ -44,6 +45,7 @@ app.use("/api/products", publicProducts);
 app.use("/api/contact", publicContact);
 app.use("/api/admin/products", adminProducts);
 app.use("/api/admin/export-documents", exportDocuments);
+app.use("/api/admin/contact-submissions", adminContactSubmissions);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

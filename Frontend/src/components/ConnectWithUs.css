@@ -122,28 +122,80 @@
   margin: 0;
 }
 
+/* ===== Tablet: stack to single column ===== */
 @media (max-width: 960px) {
   .connect__grid {
     grid-template-columns: 1fr;
-    gap: 36px;
+    gap: 32px;
   }
 }
 
+/* ===== Mobile ===== */
 @media (max-width: 560px) {
+  .connect h2 {
+    font-size: clamp(1.4rem, 5vw, 1.65rem);
+  }
+
+  .connect p {
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+  }
+
   .connect__box {
     padding: 22px 16px;
   }
 
   .connect__steps {
-    padding-left: 24px;
-    margin-left: 10px;
+    padding-left: 36px;
+    margin-left: 16px;
     gap: 18px;
+  }
+
+  .connect__steps li {
+    gap: 10px;
+  }
+
+  .connect__steps-mark {
+    width: 26px;
+    height: 26px;
+    font-size: 0.78rem;
+    left: -34px;
+  }
+
+  .connect__steps h3 {
+    font-size: 0.92rem;
+  }
+
+  .connect__steps p {
+    font-size: 0.84rem;
+  }
+}
+
+/* ===== Small phones ===== */
+@media (max-width: 400px) {
+  .connect__box {
+    padding: 18px 12px;
+    border-radius: var(--radius-sm);
+  }
+
+  .connect__steps {
+    padding-left: 32px;
+    margin-left: 14px;
+    gap: 16px;
   }
 
   .connect__steps-mark {
     width: 24px;
     height: 24px;
-    font-size: 0.75rem;
-    left: -23px;
+    font-size: 0.72rem;
+    left: -30px;
+  }
+
+  .connect h2 {
+    font-size: 1.35rem;
+  }
+
+  .connect p {
+    font-size: 0.86rem;
   }
 }

@@ -33,6 +33,7 @@ export default function ProductDetails() {
     ) || null;
 
   const [apiProduct, setApiProduct] = useState(null);
+  const [allProducts, setAllProducts] = useState(PRODUCT_CATALOG);
   const [isLoading, setIsLoading] = useState(!catalogProduct);
   const [loadError, setLoadError] = useState(false);
   const [notFound, setNotFound] = useState(false);
@@ -45,19 +46,49 @@ export default function ProductDetails() {
     setNotFound(false);
     setApiProduct(null);
 
-    api(`/products/${encodeURIComponent(productId)}`)
-      .then((product) => {
-        if (isMounted) setApiProduct(product);
-      })
-      .catch((error) => {
-        if (isMounted) {
-          if (error.message === "Product not found") setNotFound(true);
-          else if (!catalogProduct) setLoadError(true);
-        }
-      })
-      .finally(() => {
-        if (isMounted) setIsLoading(false);
-      });
+    Promise.allSettled([
+      api(`/products/${encodeURIComponent(productId)}`),
+      api("/products"),
+    ]).then(([detailResult, listResult]) => {
+      if (!isMounted) return;
+
+      if (listResult.status === "fulfilled" && Array.isArray(listResult.value) && listResult.value.length > 0) {
+        const mapped = listResult.value.map((p) => {
+          const staticMatch = PRODUCT_CATALOG.find(
+            (item) =>
+              item.id === p.slug ||
+              String(item.id) === String(p.id) ||
+              item.name?.toLowerCase() === p.name?.toLowerCase(),
+          );
+          const images = Array.isArray(p.images) && p.images.length
+            ? p.images.map((img) => assetUrl(img) || img).filter(Boolean)
+            : p.image
+            ? [assetUrl(p.image) || p.image].filter(Boolean)
+            : staticMatch?.images || [PRODUCT_CATALOG[0].images[0]];
+
+          return {
+            id: p.slug || String(p.id),
+            rawId: p.id,
+            slug: p.slug,
+            name: p.name,
+            category: staticMatch?.category || "Apparel Sector",
+            description: p.description,
+            images,
+          };
+        });
+        setAllProducts(mapped);
+      }
+
+      if (detailResult.status === "fulfilled") {
+        setApiProduct(detailResult.value);
+        setIsLoading(false);
+      } else {
+        const error = detailResult.reason;
+        if (error?.message === "Product not found") setNotFound(true);
+        else if (!catalogProduct) setLoadError(true);
+        setIsLoading(false);
+      }
+    });
 
     return () => {
       isMounted = false;
@@ -77,24 +108,34 @@ export default function ProductDetails() {
   const product = (() => {
     if (notFound && !matchedCatalog) return null;
     if (matchedCatalog && apiProduct) {
-      const image = assetUrl(apiProduct.image);
+      const apiImages = Array.isArray(apiProduct.images) && apiProduct.images.length
+        ? apiProduct.images.map((img) => assetUrl(img) || img).filter(Boolean)
+        : apiProduct.image
+        ? [assetUrl(apiProduct.image)].filter(Boolean)
+        : [];
       return {
         ...matchedCatalog,
         id: apiProduct.slug || matchedCatalog.id,
+        rawId: apiProduct.id,
+        slug: apiProduct.slug,
         name: apiProduct.name || matchedCatalog.name,
         shortDescription: apiProduct.description || matchedCatalog.shortDescription,
         description: matchedCatalog.description || apiProduct.description,
-        images: [
-          image || matchedCatalog.images[0],
-          ...matchedCatalog.images.slice(1),
-        ],
+        images: apiImages.length > 0 ? apiImages : matchedCatalog.images,
         website_link: apiProduct.website_link || matchedCatalog.website_link || "https://castbull.co.in/",
       };
     }
     if (matchedCatalog) return matchedCatalog;
     if (apiProduct) {
+      const apiImages = Array.isArray(apiProduct.images) && apiProduct.images.length
+        ? apiProduct.images.map((img) => assetUrl(img) || img).filter(Boolean)
+        : apiProduct.image
+        ? [assetUrl(apiProduct.image)].filter(Boolean)
+        : [PRODUCT_CATALOG[0].images[0]];
       return {
         id: apiProduct.slug || String(apiProduct.id),
+        rawId: apiProduct.id,
+        slug: apiProduct.slug,
         name: apiProduct.name,
         category: "Apparel Sector",
         tagline: "High-quality custom apparel, manufactured for global export.",
@@ -114,7 +155,7 @@ export default function ProductDetails() {
           { title: "Sizing", options: ["XS – 5XL", "Kids Sizes", "Custom Fit"] },
           { title: "Order Quantities", options: ["Single Piece", "Small Batch", "Bulk / Wholesale"] },
         ],
-        images: [assetUrl(apiProduct.image) || PRODUCT_CATALOG[0].images[0]],
+        images: apiImages,
         website_link: apiProduct.website_link || "https://castbull.co.in/",
       };
     }
@@ -170,7 +211,45 @@ export default function ProductDetails() {
     );
   }
 
-  const related = PRODUCT_CATALOG.filter((item) => item.id !== product.id);
+  // Related products selection:
+  // Strictly excludes the current product, and picks the next available products sequentially.
+  const related = (() => {
+    const list = allProducts && allProducts.length > 0 ? allProducts : PRODUCT_CATALOG;
+
+    const isCurrentProduct = (item) => {
+      if (!item) return false;
+      const sameId =
+        (product.id && String(item.id).toLowerCase() === String(product.id).toLowerCase()) ||
+        (product.slug && String(item.slug || "").toLowerCase() === String(product.slug).toLowerCase()) ||
+        (product.rawId && String(item.rawId || "") === String(product.rawId)) ||
+        (product.id && String(item.rawId || "") === String(product.id));
+      const sameName =
+        item.name && product.name && item.name.trim().toLowerCase() === product.name.trim().toLowerCase();
+      return Boolean(sameId || sameName);
+    };
+
+    const currentIndex = list.findIndex(isCurrentProduct);
+
+    const candidates = [];
+    if (currentIndex !== -1) {
+      // Cycle through next items in order starting right after currentIndex
+      for (let i = 1; i < list.length; i++) {
+        const candidate = list[(currentIndex + i) % list.length];
+        if (!isCurrentProduct(candidate) && !candidates.some((c) => String(c.id) === String(candidate.id))) {
+          candidates.push(candidate);
+        }
+      }
+    } else {
+      for (const item of list) {
+        if (!isCurrentProduct(item) && !candidates.some((c) => String(c.id) === String(item.id))) {
+          candidates.push(item);
+        }
+      }
+    }
+
+    return candidates.slice(0, 2);
+  })();
+
   const activeImage =
     (product.images && product.images[0]) ||
     PRODUCT_CATALOG[0].images[0];
@@ -226,45 +305,47 @@ export default function ProductDetails() {
         </section>
 
         {/* Related Products */}
-        <section className="details-related">
-          <div className="wrap">
-            <div className="details-section-head">
-              <p className="eyebrow">Explore More</p>
-              <h2>Related products.</h2>
+        {related.length > 0 && (
+          <section className="details-related">
+            <div className="wrap">
+              <div className="details-section-head">
+                <p className="eyebrow">Explore More</p>
+                <h2>Related products.</h2>
+              </div>
+              <div className="details-related__grid">
+                {related.map((item) => (
+                  <Link
+                    className="details-related-card"
+                    to={`/products/${encodeURIComponent(item.id)}`}
+                    key={item.id}
+                    aria-label={`View details for ${item.name}`}
+                  >
+                    <div className="details-related-card__image">
+                      <img
+                        src={(item.images && item.images[0]) || item.image || PRODUCT_CATALOG[0].images[0]}
+                        alt={item.name}
+                        onError={(e) => {
+                          const fallback =
+                            PRODUCT_CATALOG.find((c) => c.id === item.id)?.images?.[0] ||
+                            PRODUCT_CATALOG[0].images[0];
+                          if (e.currentTarget.src !== fallback) {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = fallback;
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="details-related-card__body">
+                      <p>{item.category}</p>
+                      <h3>{item.name}</h3>
+                      <span>View details <ArrowIcon /></span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
-            <div className="details-related__grid">
-              {related.map((item) => (
-                <Link
-                  className="details-related-card"
-                  to={`/products/${item.id}`}
-                  key={item.id}
-                  aria-label={`View details for ${item.name}`}
-                >
-                  <div className="details-related-card__image">
-                    <img
-                      src={item.images[0]}
-                      alt={item.name}
-                      onError={(e) => {
-                        const fallback =
-                          PRODUCT_CATALOG.find((c) => c.id === item.id)?.images[0] ||
-                          PRODUCT_CATALOG[0].images[0];
-                        if (e.currentTarget.src !== fallback) {
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src = fallback;
-                        }
-                      }}
-                    />
-                  </div>
-                  <div className="details-related-card__body">
-                    <p>{item.category}</p>
-                    <h3>{item.name}</h3>
-                    <span>View details <ArrowIcon /></span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         <ContactSection />
       </main>
