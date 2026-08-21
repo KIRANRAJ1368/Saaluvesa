@@ -23,6 +23,38 @@ const slugify = (name) =>
     .replace(/^-+|-+$/g, "")
     .slice(0, 60) || "product";
 
+async function getUniqueSlug(name) {
+  const baseSlug = slugify(name);
+  let slug = baseSlug;
+  let suffix = 2;
+
+  while (await Product.findOne({ where: { slug } })) {
+    const suffixText = `-${suffix}`;
+    slug = `${baseSlug.slice(0, 60 - suffixText.length)}${suffixText}`;
+    suffix += 1;
+  }
+
+  return slug;
+}
+
+function isSlugUniqueError(error) {
+  return error.name === "SequelizeUniqueConstraintError" &&
+    error.errors?.some((item) => item.path === "slug");
+}
+
+async function createProductWithUniqueSlug(attributes, name) {
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    try {
+      return await Product.create({
+        ...attributes,
+        slug: await getUniqueSlug(name),
+      });
+    } catch (error) {
+      if (!isSlugUniqueError(error) || attempt === 3) throw error;
+    }
+  }
+}
+
 /**
  * Parse stored images JSON field into an array of strings.
  * Returns [] if the field is missing or malformed.
@@ -154,16 +186,15 @@ admin.post(
       }
 
       const imagePath = `/uploads/${req.file.filename}`;
-      const product = await Product.create({
+      const product = await createProductWithUniqueSlug({
         name: req.body.name,
         description: req.body.description,
         website_link: req.body.website_link || null,
         display_order: displayOrder,
         is_active: getActiveState(req.body.is_active),
-        slug: slugify(req.body.name),
         image: imagePath,
         images: JSON.stringify([imagePath]),
-      });
+      }, req.body.name);
       res.status(201).json(serialize(req, product));
     } catch (e) {
       next(e);
