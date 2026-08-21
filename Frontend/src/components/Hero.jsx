@@ -70,7 +70,7 @@ export default function Hero() {
                       <line x1="10" y1="14" x2="21" y2="3" />
                     </svg>
                   </a>
-                  , to place your Plain and Custom Printed Requirements.
+                  , to place your Plain and Custom Printed Requirements, with our own branding.
                 </p>
               </div>
             </div>

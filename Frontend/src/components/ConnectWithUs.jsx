@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "./ConnectWithUs.css";
 import useScrollAnimation from "../hooks/useScrollAnimation";
 
@@ -20,6 +21,9 @@ export default function ConnectWithUs() {
             your submitted requirements. We ensure reliable sourcing, verification, and
             delivery to meet your business requirements.
           </p>
+          <Link to="/products" className="btn btn--mint">
+            View Our Products
+          </Link>
         </div>
 
         <div className="connect__box" data-animate="card">

@@ -287,7 +287,7 @@ export default function About() {
                 >
                   https://castbull.co.in/
                 </a>
-                , to place your Plain and Custom Printed Requirements.
+                , to place your Plain and Custom Printed Requirements, with our own branding.
               </p>
             </div>
             <a

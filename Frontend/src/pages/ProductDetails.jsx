@@ -291,14 +291,23 @@ export default function ProductDetails() {
               <h1>{product.name}</h1>
               <p className="details-summary__description">{product.shortDescription || product.description}</p>
               <div className="details-summary__actions">
-                <a
-                  href={product.website_link || "https://castbull.co.in/"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn--mint details-summary__button"
-                >
-                  Order Apparels
-                </a>
+                {product.website_link === "contact" ? (
+                  <Link
+                    to="/contact"
+                    className="btn btn--mint details-summary__button"
+                  >
+                    Order Apparels
+                  </Link>
+                ) : (
+                  <a
+                    href={product.website_link || "https://castbull.co.in/"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn--mint details-summary__button"
+                  >
+                    Order Apparels
+                  </a>
+                )}
               </div>
             </div>
           </div>

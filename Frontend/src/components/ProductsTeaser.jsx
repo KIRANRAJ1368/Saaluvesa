@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "./ProductsTeaser.css";
 import useScrollAnimation from "../hooks/useScrollAnimation";
@@ -115,6 +115,156 @@ function ProductImageSlider({ images, productName, productId }) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Product Card (shared)                                               */
+/* ------------------------------------------------------------------ */
+
+function ProductCard({ p, i }) {
+  return (
+    <article
+      className={`product-card delay-${i + 1}`}
+      data-animate="card"
+    >
+      <Link
+        to={`/products/${encodeURIComponent(p.id)}`}
+        className="product-card__image-container"
+        aria-label={`View details for ${p.name}`}
+      >
+        <ProductImageSlider
+          images={p.images.length ? p.images : [PRODUCT_CATALOG[0].images[0]]}
+          productName={p.name}
+          productId={p.id}
+        />
+        <span className="product-card__category">{p.category}</span>
+      </Link>
+      <div className="product-card__content">
+        <h3>{p.name}</h3>
+        <p>{p.description}</p>
+        <Link to={`/products/${encodeURIComponent(p.id)}`} className="product-card__link">
+          View details
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M4 12L12 4M12 4H6M12 4V10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </Link>
+      </div>
+    </article>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Product Carousel (only when products.length > 3)                   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Horizontal drag-and-click carousel with left/right arrow navigation.
+ * Shows ~3 cards at a time on desktop, 2 on tablet, 1.2 on mobile.
+ * Arrows are disabled at the start/end of the list.
+ */
+function ProductCarousel({ products }) {
+  const trackRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [cardWidth, setCardWidth] = useState(0);
+
+  // Measure a single card's width (including gap) from the track
+  const measureCard = useCallback(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const firstCard = track.querySelector(".product-card");
+    if (!firstCard) return;
+    const gap = parseFloat(getComputedStyle(track).gap) || 0;
+    setCardWidth(firstCard.offsetWidth + gap);
+  }, []);
+
+  useEffect(() => {
+    measureCard();
+    window.addEventListener("resize", measureCard);
+    return () => window.removeEventListener("resize", measureCard);
+  }, [measureCard]);
+
+  // Scroll by one card in either direction
+  const scrollTo = useCallback(
+    (index) => {
+      const clamped = Math.max(0, Math.min(index, products.length - 1));
+      setActiveIndex(clamped);
+      if (trackRef.current && cardWidth > 0) {
+        trackRef.current.scrollTo({ left: clamped * cardWidth, behavior: "smooth" });
+      }
+    },
+    [cardWidth, products.length],
+  );
+
+  // Sync activeIndex when the user drags/scrolls manually
+  const onScroll = useCallback(() => {
+    if (!trackRef.current || cardWidth === 0) return;
+    const scrollLeft = trackRef.current.scrollLeft;
+    const nearestIndex = Math.round(scrollLeft / cardWidth);
+    setActiveIndex(Math.max(0, Math.min(nearestIndex, products.length - 1)));
+  }, [cardWidth, products.length]);
+
+  const canPrev = activeIndex > 0;
+  const canNext = activeIndex < products.length - 1;
+
+  return (
+    <div className="products-carousel">
+      {/* Left arrow */}
+      <button
+        type="button"
+        className={`products-carousel__arrow products-carousel__arrow--left${canPrev ? "" : " is-disabled"}`}
+        aria-label="Previous product"
+        onClick={() => scrollTo(activeIndex - 1)}
+        disabled={!canPrev}
+      >
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      {/* Scrollable track */}
+      <div
+        className="products-carousel__viewport"
+        ref={trackRef}
+        onScroll={onScroll}
+      >
+        <div className="products-carousel__track">
+          {products.map((p, i) => (
+            <div className="products-carousel__slide" key={p.id}>
+              <ProductCard p={p} i={i} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Right arrow */}
+      <button
+        type="button"
+        className={`products-carousel__arrow products-carousel__arrow--right${canNext ? "" : " is-disabled"}`}
+        aria-label="Next product"
+        onClick={() => scrollTo(activeIndex + 1)}
+        disabled={!canNext}
+      >
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      {/* Dot indicators */}
+      <div className="products-carousel__dots" role="tablist" aria-label="Product slides">
+        {products.map((p, idx) => (
+          <button
+            key={p.id}
+            type="button"
+            role="tab"
+            aria-selected={idx === activeIndex}
+            aria-label={`Go to product ${idx + 1}`}
+            className={`products-carousel__dot${idx === activeIndex ? " is-active" : ""}`}
+            onClick={() => scrollTo(idx)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Products Teaser Section                                             */
 /* ------------------------------------------------------------------ */
 
@@ -209,38 +359,15 @@ export default function ProductsTeaser() {
           </div>
         </div>
 
-        <div className="products-teaser__grid">
-          {products.map((p, i) => (
-            <article
-              className={`product-card delay-${i + 1}`}
-              data-animate="card"
-              key={p.id}
-            >
-              <Link
-                to={`/products/${encodeURIComponent(p.id)}`}
-                className="product-card__image-container"
-                aria-label={`View details for ${p.name}`}
-              >
-                <ProductImageSlider
-                  images={p.images.length ? p.images : [PRODUCT_CATALOG[0].images[0]]}
-                  productName={p.name}
-                  productId={p.id}
-                />
-                <span className="product-card__category">{p.category}</span>
-              </Link>
-              <div className="product-card__content">
-                <h3>{p.name}</h3>
-                <p>{p.description}</p>
-                <Link to={`/products/${encodeURIComponent(p.id)}`} className="product-card__link">
-                  View details
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                    <path d="M4 12L12 4M12 4H6M12 4V10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </Link>
-              </div>
-            </article>
-          ))}
-        </div>
+        {products.length > 3 ? (
+          <ProductCarousel products={products} />
+        ) : (
+          <div className="products-teaser__grid">
+            {products.map((p, i) => (
+              <ProductCard key={p.id} p={p} i={i} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

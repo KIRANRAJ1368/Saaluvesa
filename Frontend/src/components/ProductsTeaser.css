@@ -282,3 +282,172 @@
   }
 }
 
+/* ================================================================== */
+/* Product Carousel  (active when products.length > 3)                 */
+/* ================================================================== */
+
+.products-carousel {
+  position: relative;
+  /* Reserve horizontal space for arrows */
+  margin: 0 -4px;
+}
+
+/* ── Viewport (the scrollable window) ── */
+.products-carousel__viewport {
+  overflow-x: auto;
+  /* Hide scrollbar across all browsers */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  border-radius: var(--radius-md);
+  /* Smooth momentum scroll on iOS */
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  padding: 4px 4px 8px;
+}
+
+.products-carousel__viewport::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Track (flex row of slides) ── */
+.products-carousel__track {
+  display: flex;
+  gap: clamp(20px, 3vw, 32px);
+  /* Prevent track from shrinking */
+  width: max-content;
+}
+
+/* ── Individual slide ── */
+.products-carousel__slide {
+  /* ~3 cards visible on desktop (subtract gaps) */
+  width: calc((min(1400px, 100vw - clamp(32px, 7vw, 80px)) - clamp(40px, 6vw, 64px)) / 3);
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The card inside the slide must fill the slide height */
+.products-carousel__slide .product-card {
+  flex: 1;
+  height: 100%;
+}
+
+/* ── Navigation arrows ── */
+.products-carousel__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-60%); /* nudge upward to clear the dot row */
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-line-on-navy);
+  background: rgba(5, 10, 60, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.22s ease, border-color 0.22s ease, opacity 0.22s ease, transform 0.22s ease;
+  /* Override global button reset */
+  font-family: inherit;
+}
+
+.products-carousel__arrow svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.products-carousel__arrow--left {
+  left: -22px;
+}
+
+.products-carousel__arrow--right {
+  right: -22px;
+}
+
+.products-carousel__arrow:hover:not(:disabled) {
+  background: var(--color-mint);
+  color: var(--color-navy-deep);
+  border-color: var(--color-mint);
+}
+
+.products-carousel__arrow.is-disabled,
+.products-carousel__arrow:disabled {
+  opacity: 0.3;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* ── Dot indicators ── */
+.products-carousel__dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.products-carousel__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s ease, transform 0.2s ease, width 0.2s ease;
+}
+
+.products-carousel__dot.is-active {
+  background: var(--color-mint);
+  width: 22px;
+  border-radius: 999px;
+  transform: none;
+}
+
+/* ── Tablet: 2 cards visible ── */
+@media (max-width: 960px) {
+  .products-carousel__slide {
+    width: calc((100vw - clamp(32px, 7vw, 80px) - clamp(20px, 3vw, 32px)) / 2);
+  }
+
+  .products-carousel__arrow--left {
+    left: -16px;
+  }
+
+  .products-carousel__arrow--right {
+    right: -16px;
+  }
+}
+
+/* ── Mobile: 1 card + peek at next ── */
+@media (max-width: 600px) {
+  .products-carousel__slide {
+    /* Show 1 full card + 10% peek of next */
+    width: calc(90vw - 40px);
+  }
+
+  .products-carousel__arrow {
+    width: 36px;
+    height: 36px;
+  }
+
+  .products-carousel__arrow svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .products-carousel__arrow--left {
+    left: -10px;
+  }
+
+  .products-carousel__arrow--right {
+    right: -10px;
+  }
+}
+

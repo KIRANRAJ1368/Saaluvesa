@@ -63,8 +63,17 @@ export async function api(path, options = {}) {
     }
   }
   if (response.status === 204) return null;
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body.message || "Request failed");
+  const rawBody = await response.text();
+  let body = {};
+  try {
+    body = rawBody ? JSON.parse(rawBody) : {};
+  } catch {
+    // A proxy or server error can return HTML instead of the API's JSON shape.
+  }
+  if (!response.ok) {
+    const fallback = rawBody.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    throw new Error(body.message || fallback || `Request failed (HTTP ${response.status})`);
+  }
   return body;
 }
 
@@ -87,10 +96,61 @@ export async function download(path, filename) {
     const body = await response.json().catch(() => ({}));
     throw new Error(body.message || "Download failed");
   }
-  const url = URL.createObjectURL(await response.blob());
+  const blob = await response.blob();
+  const pdfBlob = new Blob([blob], { type: "application/pdf" });
+  const url = URL.createObjectURL(pdfBlob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = filename;
+  link.download = filename || "document.pdf";
+  link.style.display = "none";
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => {
+    try {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch {
+      // Cleaned up
+    }
+  }, 60000);
+}
+
+export async function preview(path) {
+  let previewWindow = null;
+  try {
+    previewWindow = window.open("", "_blank");
+  } catch {
+    // Popup might be blocked, will fallback below
+  }
+
+  try {
+    const response = await request(path, {});
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      if (previewWindow && !previewWindow.closed) previewWindow.close();
+      throw new Error(body.message || "PDF preview failed");
+    }
+    const blob = await response.blob();
+    const pdfBlob = new Blob([blob], { type: "application/pdf" });
+    const url = URL.createObjectURL(pdfBlob);
+
+    if (previewWindow && !previewWindow.closed) {
+      previewWindow.location.href = url;
+    } else {
+      const fallback = window.open(url, "_blank", "noopener,noreferrer");
+      if (!fallback) {
+        const link = document.createElement("a");
+        link.href = url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 120000);
+  } catch (err) {
+    if (previewWindow && !previewWindow.closed) previewWindow.close();
+    throw err;
+  }
 }

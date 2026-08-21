@@ -1,5 +1,5 @@
-﻿import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { Link, useLocation } from "react-router-dom";
 import "./Header.css";
 import logo from "../assets/logo.jpeg";
 import LanguageSelector from "./LanguageSelector";
@@ -16,6 +16,13 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const savedScrollY = useRef(0);
   const navigatingRef = useRef(false);
+  const { pathname } = useLocation();
+
+  const isActive = (link) => {
+    if (!link.to) return false;
+    const path = link.to.split("#")[0] || "/";
+    return path === "/" ? pathname === "/" : pathname.startsWith(path);
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -62,16 +69,30 @@ export default function Header() {
     setMenuOpen(false);
   };
 
-  const renderLink = (link, onClick) =>
-    link.to ? (
-      <Link key={link.label} to={link.to} onClick={onClick}>
+  const renderLink = (link, onClick) => {
+    const active = isActive(link);
+    return link.to ? (
+      <Link
+        key={link.label}
+        to={link.to}
+        onClick={onClick}
+        className={active ? "is-active" : ""}
+        aria-current={active ? "page" : undefined}
+      >
         {link.label}
       </Link>
     ) : (
-      <a key={link.label} href={link.href} onClick={onClick}>
+      <a
+        key={link.label}
+        href={link.href}
+        onClick={onClick}
+        className={active ? "is-active" : ""}
+        aria-current={active ? "page" : undefined}
+      >
         {link.label}
       </a>
     );
+  };
 
   return (
     <div className="header-wrapper">

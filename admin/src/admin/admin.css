@@ -1305,6 +1305,36 @@
   box-shadow: 0 0 0 4px rgba(121, 246, 194, 0.25);
 }
 
+/* ---- Input with side dropdown ---- */
+.admin-input-with-dropdown {
+  display: flex;
+  gap: 0;
+  width: 100%;
+}
+
+.admin-input-with-dropdown input {
+  flex: 1;
+  min-width: 0;
+  border-radius: 12px 0 0 12px;
+}
+
+.admin-input-dropdown {
+  flex-shrink: 0;
+  width: auto !important;
+  min-width: 120px;
+  border-radius: 0 12px 12px 0 !important;
+  border-left: none !important;
+  cursor: pointer;
+  font-weight: 500;
+  padding: 12px 14px !important;
+}
+
+.admin-input-with-dropdown input:disabled {
+  background: var(--admin-ivory);
+  color: var(--admin-ink-faint);
+  cursor: not-allowed;
+}
+
 /* ---- Visibility Toggle Card ---- */
 .admin-toggle-card {
   display: flex;
@@ -3201,15 +3231,563 @@
   padding-left: 18px;
 }
 
+.export-docs-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--admin-line);
+  background: rgba(245, 247, 244, 0.45);
+}
+
+.export-docs-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border: 1px solid var(--admin-line);
+  border-radius: 10px;
+  background: var(--admin-white);
+  width: 100%;
+  max-width: 360px;
+  transition: border-color 0.18s var(--admin-ease), box-shadow 0.18s var(--admin-ease);
+}
+
+.export-docs-search:focus-within {
+  border-color: var(--admin-mint-dim);
+  box-shadow: 0 0 0 3px rgba(63, 207, 154, 0.15);
+}
+
+.export-docs-search input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.88rem;
+  color: var(--admin-ink);
+}
+
+.export-docs-count {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--admin-ink-soft);
+  white-space: nowrap;
+}
+
+.admin-actions-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.admin-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s var(--admin-ease), background 0.15s var(--admin-ease), color 0.15s var(--admin-ease), border-color 0.15s var(--admin-ease);
+  line-height: 1.2;
+}
+
+.admin-action-btn--view {
+  background: rgba(7, 16, 91, 0.07);
+  color: var(--admin-navy);
+  border-color: rgba(7, 16, 91, 0.12);
+}
+
+.admin-action-btn--view:hover {
+  background: rgba(7, 16, 91, 0.14);
+  color: var(--admin-navy-deep);
+  transform: translateY(-1px);
+}
+
+.admin-action-btn--edit {
+  background: rgba(121, 246, 194, 0.2);
+  color: #0b6849;
+  border-color: rgba(63, 207, 154, 0.35);
+}
+
+.admin-action-btn--edit:hover {
+  background: var(--admin-mint);
+  color: var(--admin-navy-deep);
+  transform: translateY(-1px);
+}
+
+.admin-action-btn--delete {
+  background: var(--admin-danger-soft);
+  color: var(--admin-danger);
+  border-color: rgba(229, 72, 77, 0.2);
+}
+
+.admin-action-btn--delete:hover {
+  background: #fad7d9;
+  color: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.admin-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.cell-invoice-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--admin-navy);
+  font-family: var(--admin-font-display);
+}
+
+.cell-meta-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--admin-ink-faint);
+}
+
+.cell-amount-strong {
+  display: block;
+  font-weight: 700;
+  color: var(--admin-navy-deep);
+  font-family: var(--admin-font-display);
+}
+
+/* View Modal Details */
+.export-view-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.export-view-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 18px 22px;
+  border: 1px solid var(--admin-line);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(7, 16, 91, 0.04) 0%, rgba(121, 246, 194, 0.08) 100%);
+}
+
+.export-view-hero__left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.export-view-hero__icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: var(--admin-navy);
+  color: var(--admin-mint);
+}
+
+.export-view-hero__titles h3 {
+  margin: 0;
+  color: var(--admin-navy-deep);
+  font-family: var(--admin-font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.export-view-hero__titles p {
+  margin: 2px 0 0;
+  color: var(--admin-ink-soft);
+  font-size: 0.84rem;
+}
+
+.export-view-hero__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.export-view-downloads {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.export-view-download-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+  background: var(--admin-white);
+  box-shadow: 0 4px 12px rgba(7, 16, 91, 0.03);
+}
+
+.export-view-download-card strong {
+  display: block;
+  color: var(--admin-navy);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.export-view-download-card small {
+  display: block;
+  color: var(--admin-ink-faint);
+  font-size: 0.76rem;
+}
+
+.export-view-download-card .btn-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.export-view-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.export-view-card {
+  padding: 16px 18px;
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+  background: var(--admin-ivory);
+}
+
+.export-view-card--full {
+  grid-column: 1 / -1;
+}
+
+.export-view-card__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  color: var(--admin-navy);
+  font-family: var(--admin-font-display);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.export-view-card__list {
+  display: grid;
+  gap: 8px;
+  font-size: 0.84rem;
+}
+
+.export-view-card__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed rgba(7, 16, 91, 0.08);
+}
+
+.export-view-card__row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.export-view-card__row span:first-child {
+  color: var(--admin-ink-soft);
+  font-weight: 500;
+}
+
+.export-view-card__row span:last-child {
+  color: var(--admin-ink);
+  font-weight: 600;
+  text-align: right;
+  max-width: 60%;
+}
+
+.export-view-totals-box {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 14px 20px;
+  border: 1px solid var(--admin-line);
+  border-radius: 12px;
+  background: var(--admin-white);
+}
+
+.export-view-totals-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.export-view-totals-item span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--admin-ink-soft);
+  font-weight: 600;
+}
+
+.export-view-totals-item strong {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--admin-navy-deep);
+  font-family: var(--admin-font-display);
+}
+
+/* Form Styles for Add/Edit Export Document */
+.export-form-section {
+  margin-top: 20px;
+  padding: 18px 20px;
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+  background: var(--admin-white);
+}
+
+.export-form-section:first-child {
+  margin-top: 0;
+}
+
+.export-form-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--admin-line-soft);
+}
+
+.export-form-section__head h3 {
+  margin: 0;
+  color: var(--admin-navy);
+  font-family: var(--admin-font-display);
+  font-size: 0.96rem;
+  font-weight: 700;
+}
+
+.export-form-section__head p {
+  margin: 2px 0 0;
+  color: var(--admin-ink-soft);
+  font-size: 0.78rem;
+}
+
+.export-items-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.export-bulk-paste-box {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px dashed var(--admin-line);
+  border-radius: 10px;
+  background: var(--admin-ivory);
+}
+
+.export-bulk-paste-box textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--admin-line);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  background: var(--admin-white);
+  margin-bottom: 8px;
+  resize: vertical;
+}
+
+.export-form-live-summary {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 14px 20px;
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(7, 16, 91, 0.03) 0%, rgba(121, 246, 194, 0.1) 100%);
+  margin-top: 20px;
+}
+
+.export-form-live-summary__item {
+  display: flex;
+  flex-direction: column;
+}
+
+.export-form-live-summary__label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--admin-ink-soft);
+  font-weight: 600;
+}
+
+.export-form-live-summary__val {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--admin-navy-deep);
+  font-family: var(--admin-font-display);
+}
+
+.export-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--admin-line);
+}
+
+@media (max-width: 900px) {
+  .export-view-downloads {
+    grid-template-columns: 1fr;
+  }
+  .export-view-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.export-preview { color: #000; font-family: Arial, sans-serif; font-size: 12px; }
+.export-preview__header { padding: 10px 0 24px; text-align: center; }
+.export-preview__header h1 { margin: 0 0 22px; font-size: 22px; }
+.export-preview__header h2 { margin: 0 0 6px; font-size: 16px; }
+.export-preview__header p, .export-preview p { margin: 3px 0; }
+.export-preview__meta { display: flex; justify-content: space-between; gap: 14px; border-block: 1px solid #111; padding: 8px 4px; font-weight: 700; }
+.export-preview__grid { display: grid; grid-template-columns: 1fr 1fr; }
+.export-preview__grid--three { grid-template-columns: repeat(3, 1fr); }
+.export-preview__grid section { min-height: 126px; border: 1px solid #111; padding: 6px; }
+.export-preview__grid h3, .export-preview__details h3 { margin: 0 0 6px; text-align: center; font-size: 12px; }
+.export-preview__party { display: grid; gap: 3px; }
+.export-preview table { width: 100%; margin-top: 8px; border-collapse: collapse; }
+.export-preview th, .export-preview td { border: 1px solid #111; padding: 5px; text-align: left; vertical-align: top; }
+.export-preview th { text-align: center; }
+.export-preview__details { min-height: 70px; margin-top: 8px; border: 1px solid #111; padding: 6px; }
+.export-preview footer { margin-top: 34px; line-height: 1.8; }
+
+/* Printable document layouts mirror the commercial/proforma invoice and packing-list formats. */
+.export-document { color: #000; background: #fff; box-sizing: border-box; font-family: Arial, sans-serif; font-size: 11px; line-height: 1.4; margin: 0 auto; max-width: 1020px; min-height: 1280px; padding: 18px 22px; }
+
+/* ── Title (centered, above header) ── */
+.export-document__title { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 12px; letter-spacing: 0.03em; }
+
+/* ── Header (logo left, company info right) ── */
+.export-document header { display: flex; align-items: flex-start; gap: 16px; padding-bottom: 8px; min-height: 100px; }
+.export-document__logo { width: 105px; height: 105px; object-fit: contain; flex-shrink: 0; }
+.export-document__header-info { flex: 1; }
+.export-document__header-info h2 { font-size: 14px; font-weight: 700; margin: 0 0 4px; }
+.export-document__header-info p { margin: 2px 0; font-size: 10px; line-height: 1.35; }
+.export-document__reg-details { font-size: 9.5px !important; margin-top: 3px !important; }
+
+/* ── Dashed Separator Box ── */
+.export-document__dashed-box { border: 1px dashed #ccc; height: 26px; margin: 6px 0 10px; width: 100%; box-sizing: border-box; }
+
+/* ── Date/Invoice/AWB row (commercial/proforma) ── */
+.export-document__meta { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0 8px; font-size: 11px; }
+
+/* ── General Info bar ── */
+.export-document__bar { border: 1px solid #111; margin: 0 0 0; padding: 3px 6px; text-align: center; font-size: 11px; font-weight: 700; }
+
+/* ── Two-column grid ── */
+.export-document__grid { display: grid; grid-template-columns: 1fr 1fr; border-left: 1px solid #111; border-top: 1px solid #111; }
+.export-document__grid--three { grid-template-columns: repeat(3, 1fr); }
+.export-document__grid section { border-right: 1px solid #111; border-bottom: 1px solid #111; box-sizing: border-box; padding: 5px 7px; min-height: 100px; }
+.export-document__grid h3 { border-bottom: 1px solid #111; margin: -5px -7px 5px; padding: 3px 7px; text-align: center; font-size: 11px; font-weight: 700; background: #f9f9f9; }
+
+/* ── Party block ── */
+.export-doc-party { display: grid; gap: 2px; font-size: 10.5px; }
+.export-doc-party p { margin: 2px 0; font-size: 10.5px; line-height: 1.35; }
+.export-doc-party b { display: inline; font-weight: 700; }
+.export-doc-party span { font-weight: 400; }
+
+/* ── Field (label: value) ── */
+.export-document p { margin: 2px 0; font-size: 10.5px; }
+
+/* ── Items table ── */
+.export-document table { border-collapse: collapse; margin-top: 8px; width: 100%; font-size: 10.5px; }
+.export-document th, .export-document td { border: 1px solid #111; padding: 4px 5px; vertical-align: top; }
+.export-document th { text-align: center; font-weight: 700; background: #f5f5f5; font-size: 10px; }
+
+/* ── Compliance wrap (commercial/proforma) ── */
+.export-document__compliance-wrap { margin-top: 10px; }
+.export-document__compliance-wrap > b { display: block; font-size: 11px; margin-bottom: 4px; font-weight: 700; }
+.export-document__compliance-body { display: flex; gap: 14px; align-items: flex-start; }
+.export-document__compliance-box { border: 1px solid #111; min-height: 76px; padding: 6px; width: 58%; box-sizing: border-box; font-size: 11px; }
+.export-document__compliance-totals { flex: 1; display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
+.export-document__compliance-totals > div { display: flex; justify-content: space-between; gap: 20px; width: 100%; font-size: 11px; }
+.export-document__compliance-totals > div > span:last-child { font-weight: 700; min-width: 60px; text-align: right; }
+
+/* ── Certify text ── */
+.export-document__certify { margin: 18px 0 0; font-style: italic; font-size: 11px; color: #222; }
+
+/* ── Packing list: right-aligned meta ── */
+.export-document__packing-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; padding: 6px 0; font-size: 11px; }
+
+/* ── Packing list references row ── */
+.export-document__references { display: flex; justify-content: space-between; align-items: flex-start; padding: 6px 0 10px; font-size: 11px; }
+.export-document__ref-underline { border-bottom: 1px solid #555; padding-bottom: 2px; min-width: 220px; display: inline-block; }
+.export-document__ref-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+
+/* ── Shipment Information section ── */
+.export-document__shipment { border: 1px solid #111; display: grid; grid-template-columns: 1fr 1fr; margin-top: 8px; }
+.export-document__shipment h3 { grid-column: 1 / -1; border-bottom: 1px solid #111; margin: 0; padding: 3px 7px; text-align: center; font-size: 11px; font-weight: 700; background: #f9f9f9; }
+.export-document__shipment > div { padding: 5px 7px; }
+.export-document__shipment > div + div { border-left: 1px solid #111; }
+
+/* ── Packing totals (proper table format) ── */
+.export-document__packing-totals-wrapper { display: flex; justify-content: flex-end; align-items: flex-end; gap: 12px; margin-top: 8px; }
+.export-document__packing-totals-label { font-size: 11px; white-space: nowrap; align-self: center; }
+.export-document__packing-totals-table { border-collapse: collapse; font-size: 10.5px; }
+.export-document__packing-totals-table th, .export-document__packing-totals-table td { border: 1px solid #111; padding: 3px 8px; text-align: center; }
+.export-document__packing-totals-table th { background: #f5f5f5; font-weight: 700; }
+
+/* ── Package description ── */
+.export-document__package { margin-top: 10px; }
+.export-document__package > b { font-size: 11px; display: block; margin-bottom: 3px; }
+.export-document__package p { border: 1px dashed #bbb; min-height: 34px; padding: 5px; margin: 0; }
+
+/* ── Footer with underlines ── */
+.export-document__footer { margin-top: 36px; }
+.export-document__footer-row { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 14px; }
+.export-document__footer-row > span:first-child { white-space: nowrap; font-size: 11px; min-width: 130px; }
+.export-document__footer-line { flex: 1; max-width: 340px; border-bottom: 1px solid #333; min-height: 18px; padding-bottom: 1px; font-size: 11px; }
+
+/* ── Export document options panel ── */
+.export-document-options { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--admin-line); border-radius: var(--admin-radius); overflow: hidden; }
+.export-document-options > div { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
+.export-document-options > div + div { border-left: 1px solid var(--admin-line); }
+.export-document-options strong { font-size: 13px; }
+.export-document-options button { background: var(--admin-surface-2); border: 1px solid var(--admin-line); border-radius: var(--admin-radius-sm); color: var(--admin-text); cursor: pointer; font-size: 12px; font-family: inherit; padding: 6px 12px; transition: background 0.15s; }
+.export-document-options button:hover { background: var(--admin-mint-dim); }
+.export-document-options button:disabled { cursor: not-allowed; opacity: 0.45; }
+.export-document-options span { display: flex; gap: 8px; }
+
 @media (max-width: 700px) {
   .export-totals { grid-template-columns: 1fr; }
   .export-review__actions, .export-review__summary { align-items: stretch; flex-direction: column; }
   .export-review__summary span + span { border-left: 0; border-top: 1px solid var(--admin-line); padding: 10px 0 0; }
+  .export-document-options { grid-template-columns: 1fr; }
+  .export-document-options > div + div { border-top: 1px solid var(--admin-line); border-left: 0; }
+  .export-document__meta, .export-document__references, .export-document__grid, .export-document__grid--three, .export-document__shipment { display: block; }
+  .export-document header { flex-direction: column; }
 }
 
 @media print {
   body * { visibility: hidden; }
   .export-review, .export-review * { visibility: visible; }
   .export-review { position: absolute; inset: 0; width: 100%; }
+
   .export-review__actions { display: none; }
 }
