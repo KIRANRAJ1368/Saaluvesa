@@ -204,7 +204,7 @@ async function legacyPdfBuffer(documentId, documentType = "proforma") {
     pdf.text(h, xs[i], y, { width: (xs[i + 1] || 555) - xs[i] - 3 }),
   );
   y += 14;
-  pdf.moveTo(38, y).lineTo(555, y).stroke();
+  pdf.moveTo(38, y).lineTo(555, y).stroke("#07105b");
   pdf.font("Helvetica");
   document.items.forEach((item) => {
     if (y > 670) {
@@ -227,7 +227,7 @@ async function legacyPdfBuffer(documentId, documentType = "proforma") {
       }),
     );
     y += 26;
-    pdf.moveTo(38, y).lineTo(555, y).stroke();
+    pdf.moveTo(38, y).lineTo(555, y).stroke("#07105b");
   });
   pdf.y = y + 14;
 
@@ -291,28 +291,39 @@ function pdfValue(value) {
 }
 
 // ── Layout constants shared across the redesigned invoice / packing list ─────
-// Keeping these centralised means every height calculation and every draw
-// call agree on exactly the same numbers, which is what prevents text from
-// overlapping or sticking together. These values were widened slightly
-// (compared to the previous revision) specifically so the last row inside
-// any two-column section — e.g. "Payment Method" in Shipment Details, which
-// is the tallest/last column — always has clear air above the box border.
-const SECTION_HEADER_H = 15; // grey title bar above a two-column block
-const SECTION_TOP_PAD = 7; // gap between the grey bar and the first field
-const SECTION_BOTTOM_PAD = 11; // gap below the LAST field before the box border
-const FIELD_GAP = 5; // vertical gap between stacked label/value rows
-const BASE_FONT = 7.2; // base field font size (bumped slightly for readability)
+// Centralised so every height calculation and draw call use identical numbers,
+// preventing text overlap — especially around "Payment Method" (last row in
+// Shipment Details) and the box borders beneath each column.
+// Kept tight so a typical document fits one A4 page at natural size; anything
+// longer is handled by the uniform scale-to-fit pass in pdfBufferFromDocument.
+const SECTION_HEADER_H = 14;   // grey title bar height
+const SECTION_TOP_PAD = 3;     // gap between a sub-header bar and the first field
+const SECTION_ROW_BOTTOM_PAD = 4;  // gap below fields in the upper row of General Info
+const SECTION_BOTTOM_PAD = 5; // gap below the LAST field before the outer box border
+const FIELD_GAP = 2.2;           // vertical gap between stacked label/value rows
+const FIELD_TOP_PAD = 1.2;       // inset from the top of each field row
+const BASE_FONT = 6.8;         // base field font size
+const BLOCK_GAP = 5;           // gap between major sections (meta → grid, grid → table, etc.)
+const CELL_FONT = 6.9;         // table header / cell font size
+const CELL_PAD_X = 3.5;          // horizontal inset inside table cells
+const ROW_PAD_V = 2.5;         // vertical padding above + below text in each cell
+const PAGE_CONTENT_BOTTOM = 818; // lowest Y (top-down) any body content may occupy
+const SIGNATURE_GAP = 6;       // clear air between body content and signature block
+const SINGLE_PAGE_BOTTOM_LIMIT = 832; // when scaling, content may reach at most this Y
 
-function pdfRowHeight(pdf, columns, values, minimumHeight = 19, fontSize = BASE_FONT) {
-  let contentHeight = 0;
+// Natural height a table row needs so every cell's wrapped text fits fully.
+function pdfMeasureRow(pdf, columns, values, minHeight = 17, isHeader = false) {
+  let contentH = 0;
   columns.forEach((width, i) => {
-    pdf.font("Helvetica").fontSize(fontSize);
-    contentHeight = Math.max(
-      contentHeight,
-      pdf.heightOfString(pdfValue(values[i] ?? ""), { width: width - 8, lineGap: 1.6 }),
+    const val = values[i];
+    if (val === undefined || val === null || String(val) === "") return;
+    pdf.font(isHeader ? "Helvetica-Bold" : "Helvetica").fontSize(CELL_FONT);
+    contentH = Math.max(
+      contentH,
+      pdf.heightOfString(String(val), { width: width - CELL_PAD_X * 2, lineGap: 1.3 }),
     );
   });
-  return Math.max(minimumHeight, contentHeight + 9);
+  return Math.max(minHeight, contentH + ROW_PAD_V * 2);
 }
 
 function pdfTextHeight(pdf, text, width, font, fontSize) {
@@ -320,35 +331,33 @@ function pdfTextHeight(pdf, text, width, font, fontSize) {
   return pdf.heightOfString(pdfValue(text), { width, lineGap: 1.4 });
 }
 
-// Draw a bordered table row. Header cells get grey fill + bold text.
+// Draw a bordered table row. The row auto-expands to fit its tallest cell and
+// cell text is vertically centred, so multi-line headers/values are never cut
+// off or touching the borders. Returns the actual row height used.
 function pdfRow(pdf, y, startX, columns, values, height, isHeader = false, aligns = []) {
+  const rowH = pdfMeasureRow(pdf, columns, values, height, isHeader);
   let x = startX;
   columns.forEach((width, i) => {
     const val = values[i] === undefined || values[i] === null ? "" : String(values[i]);
     const align = aligns[i] || (isHeader ? "center" : "left");
     if (isHeader) {
-      pdf.rect(x, y, width, height).fillAndStroke("#f2f2f2", "#000000");
-      pdf.fillColor("#000000").font("Helvetica-Bold").fontSize(7.2)
-        .text(val, x + 3, y + 5, {
-          width: width - 6,
-          height: height - 8,
-          align: "center",
-          lineGap: 1.4,
-        });
+      pdf.rect(x, y, width, rowH).fillAndStroke("#eaeee7", "#0b0f2b");
     } else {
-      pdf.rect(x, y, width, height).stroke();
-      if (val) {
-        pdf.fillColor("#000000").font("Helvetica").fontSize(7.2)
-          .text(val, x + 4, y + 5, {
-            width: width - 8,
-            height: height - 8,
-            align,
-            lineGap: 1.4,
-          });
-      }
+      pdf.rect(x, y, width, rowH).stroke("#07105b");
+    }
+    if (val) {
+      pdf.fillColor("#0b0f2b")
+        .font(isHeader ? "Helvetica-Bold" : "Helvetica").fontSize(CELL_FONT);
+      const textH = pdf.heightOfString(val, { width: width - CELL_PAD_X * 2, lineGap: 1.3 });
+      pdf.text(val, x + CELL_PAD_X, y + (rowH - textH) / 2, {
+        width: width - CELL_PAD_X * 2,
+        align,
+        lineGap: 1.3,
+      });
     }
     x += width;
   });
+  return rowH;
 }
 
 // Height a single "Label: Value" row needs, given the label column width.
@@ -358,21 +367,23 @@ function pdfRow(pdf, y, startX, columns, values, height, isHeader = false, align
 // "Payment Method" clearly separated from the box edge below them.
 function pdfFieldHeight(pdf, label, value, width, labelWidth, fontSize = BASE_FONT) {
   pdf.font("Helvetica-Bold").fontSize(fontSize);
-  const labelHeight = pdf.heightOfString(label, { width: labelWidth - 6, lineGap: 1.6 });
+  const labelHeight = pdf.heightOfString(label, { width: labelWidth - 6, lineGap: 1.3 });
   pdf.font("Helvetica").fontSize(fontSize);
-  const valueHeight = pdf.heightOfString(pdfValue(value), { width: width - labelWidth - 8, lineGap: 1.6 });
-  return Math.max(labelHeight, valueHeight, fontSize * 1.55) + 5.5;
+  const valueHeight = pdf.heightOfString(pdfValue(value), { width: width - labelWidth - 8, lineGap: 1.3 });
+  return Math.max(labelHeight, valueHeight, fontSize * 1.5) + 3.2;
 }
 
 function pdfField(pdf, label, value, x, y, width, labelWidth, fontSize = BASE_FONT, height) {
   const fieldHeight = height || pdfFieldHeight(pdf, label, value, width, labelWidth, fontSize);
-  pdf.font("Helvetica-Bold").fontSize(fontSize).fillColor("#000000")
-    .text(label, x + 4, y, { width: labelWidth - 6, height: fieldHeight - 2, lineGap: 1.6 });
+  const textY = y + FIELD_TOP_PAD;
+  const textH = fieldHeight - FIELD_TOP_PAD - 0.8;
+  pdf.font("Helvetica-Bold").fontSize(fontSize).fillColor("#0b0f2b")
+    .text(label, x + 4, textY, { width: labelWidth - 6, height: textH, lineGap: 1.3 });
   pdf.font("Helvetica").fontSize(fontSize)
-    .text(pdfValue(value), x + labelWidth, y, {
+    .text(pdfValue(value), x + labelWidth, textY, {
       width: width - labelWidth - 8,
-      height: fieldHeight - 2,
-      lineGap: 1.6,
+      height: textH,
+      lineGap: 1.3,
     });
   return fieldHeight;
 }
@@ -419,15 +430,15 @@ function drawTwoColumnSection(pdf, {
   const boxH = SECTION_HEADER_H + SECTION_TOP_PAD + contentH + SECTION_BOTTOM_PAD;
 
   // Outer borders
-  pdf.rect(x, y, leftW, boxH).stroke();
-  pdf.rect(x + leftW, y, rightW, boxH).stroke();
+  pdf.rect(x, y, leftW, boxH).stroke("#07105b");
+  pdf.rect(x + leftW, y, rightW, boxH).stroke("#07105b");
 
   // Header bars
-  pdf.rect(x, y, leftW, SECTION_HEADER_H).fillAndStroke("#f2f2f2", "#000000");
-  pdf.fillColor("#000000").font("Helvetica-Bold").fontSize(8)
+  pdf.rect(x, y, leftW, SECTION_HEADER_H).fillAndStroke("#eaeee7", "#0b0f2b");
+  pdf.fillColor("#0b0f2b").font("Helvetica-Bold").fontSize(8)
     .text(titles[0], x, y + 4, { width: leftW, align: "center" });
-  pdf.rect(x + leftW, y, rightW, SECTION_HEADER_H).fillAndStroke("#f2f2f2", "#000000");
-  pdf.fillColor("#000000").font("Helvetica-Bold").fontSize(8)
+  pdf.rect(x + leftW, y, rightW, SECTION_HEADER_H).fillAndStroke("#eaeee7", "#0b0f2b");
+  pdf.fillColor("#0b0f2b").font("Helvetica-Bold").fontSize(8)
     .text(titles[1], x + leftW, y + 4, { width: rightW, align: "center" });
 
   // Field rows
@@ -436,6 +447,74 @@ function drawTwoColumnSection(pdf, {
   drawFieldColumn(pdf, fieldColumns[1], x + leftW, fieldsTopY, rightW, rightLabelW, fontSize);
 
   return y + boxH;
+}
+
+// Draws the full "General Information" block used on commercial/proforma invoices:
+// one outer border, a top "General Information" bar, then two stacked two-column
+// rows (Sender|Shipment, Receiver|Importer).  Sharing one outer box and sizing
+// each row independently prevents the Payment Method row from colliding with the
+// Receiver Details header below it.
+function drawGeneralInformationBlock(pdf, {
+  x, y, width, halfW, rightW,
+  row1Titles, row1Columns, row1LabelWidths,
+  row2Titles, row2Columns, row2LabelWidths,
+  fontSize = BASE_FONT,
+}) {
+  const measureRow = (fields, colW, labelW) =>
+    measureFieldColumn(pdf, fields, colW, labelW, fontSize);
+
+  const row1LeftH  = measureRow(row1Columns[0], halfW, row1LabelWidths[0]);
+  const row1RightH = measureRow(row1Columns[1], rightW, row1LabelWidths[1]);
+  const row1ContentH = Math.max(row1LeftH, row1RightH);
+
+  const row2LeftH  = measureRow(row2Columns[0], halfW, row2LabelWidths[0]);
+  const row2RightH = measureRow(row2Columns[1], rightW, row2LabelWidths[1]);
+  const row2ContentH = Math.max(row2LeftH, row2RightH);
+
+  const row1H = SECTION_HEADER_H + SECTION_TOP_PAD + row1ContentH + SECTION_ROW_BOTTOM_PAD;
+  const row2H = SECTION_HEADER_H + SECTION_TOP_PAD + row2ContentH + SECTION_BOTTOM_PAD;
+  const totalH = SECTION_HEADER_H + row1H + row2H;
+
+  // Outer border
+  pdf.rect(x, y, width, totalH).stroke("#07105b");
+
+  // "General Information" top bar
+  pdf.rect(x, y, width, SECTION_HEADER_H).fillAndStroke("#eaeee7", "#0b0f2b");
+  pdf.fillColor("#0b0f2b").font("Helvetica-Bold").fontSize(8)
+    .text("General Information", x, y + 4, { width, align: "center" });
+
+  // ── Row 1: Sender Details | Shipment Details ──
+  const row1Y = y + SECTION_HEADER_H;
+  pdf.moveTo(x, row1Y + row1H).lineTo(x + width, row1Y + row1H).stroke("#07105b");
+  pdf.moveTo(x + halfW, row1Y).lineTo(x + halfW, row1Y + row1H).stroke("#07105b");
+
+  pdf.rect(x, row1Y, halfW, SECTION_HEADER_H).fillAndStroke("#eaeee7", "#0b0f2b");
+  pdf.fillColor("#0b0f2b").font("Helvetica-Bold").fontSize(8)
+    .text(row1Titles[0], x, row1Y + 4, { width: halfW, align: "center" });
+  pdf.rect(x + halfW, row1Y, rightW, SECTION_HEADER_H).fillAndStroke("#eaeee7", "#0b0f2b");
+  pdf.fillColor("#0b0f2b").font("Helvetica-Bold").fontSize(8)
+    .text(row1Titles[1], x + halfW, row1Y + 4, { width: rightW, align: "center" });
+
+  const row1FieldsY = row1Y + SECTION_HEADER_H + SECTION_TOP_PAD;
+  drawFieldColumn(pdf, row1Columns[0], x, row1FieldsY, halfW, row1LabelWidths[0], fontSize);
+  drawFieldColumn(pdf, row1Columns[1], x + halfW, row1FieldsY, rightW, row1LabelWidths[1], fontSize);
+
+  // ── Row 2: Receiver Details | Importer of Record Details ──
+  const row2Y = row1Y + row1H;
+  pdf.moveTo(x + halfW, row2Y).lineTo(x + halfW, row2Y + row2H).stroke("#07105b");
+
+  pdf.rect(x, row2Y, halfW, SECTION_HEADER_H).fillAndStroke("#eaeee7", "#0b0f2b");
+  pdf.fillColor("#0b0f2b").font("Helvetica-Bold").fontSize(8)
+    .text(row2Titles[0], x, row2Y + 4, { width: halfW, align: "center" });
+  pdf.rect(x + halfW, row2Y, rightW, SECTION_HEADER_H).fillAndStroke("#eaeee7", "#0b0f2b");
+  pdf.fillColor("#0b0f2b").font("Helvetica-Bold").fontSize(8)
+    .text(row2Titles[1], x + halfW, row2Y + 4, { width: rightW, align: "center" });
+
+  const row2FieldsY = row2Y + SECTION_HEADER_H + SECTION_TOP_PAD;
+  drawFieldColumn(pdf, row2Columns[0], x, row2FieldsY, halfW, row2LabelWidths[0], fontSize);
+  drawFieldColumn(pdf, row2Columns[1], x + halfW, row2FieldsY, rightW, row2LabelWidths[1], fontSize);
+
+  return y + totalH;
 }
 
 // Draws the company header (title + logo + company info in dashed border).
@@ -447,12 +526,12 @@ function pdfCompanyHeader(pdf, document, title) {
   const W = 519;
 
   // Keep the document identity compact and separate from the form fields below.
-  pdf.font("Helvetica-Bold").fontSize(14.5).fillColor("#000000")
-    .text(title, L, 14, { width: W, align: "center" });
+  pdf.font("Helvetica-Bold").fontSize(13).fillColor("#0b0f2b")
+    .text(title, L, 10, { width: W, align: "center" });
 
-  const boxTop = 36;
-  const logoSize = 62;
-  const textX = L + logoSize + 20;
+  const boxTop = 28;
+  const logoSize = 48;
+  const textX = L + logoSize + 14;
   const textW = R - textX - 6;
   const companyName = document.sender_name ||
     "Saaluvesa Enterprises Private Limited";
@@ -460,28 +539,28 @@ function pdfCompanyHeader(pdf, document, title) {
     "Dr.No.18/76, Thiru.Ve.Ka. St, Punjai Puliampatti, SATHYAMANGALAM, ERODE, TAMIL NADU. -638459";
   const regDetails = document.additional_company_details ||
     "C.I.N : U46900TZ2025PTC36041 | ROC COIMBATORE - REG. NO : 036041\nGST - 33ABRCS3304A1ZR | Import Export code - ABRCS3304A | ICEGATE ID - ABRCS3304APIE000";
-  const companyNameHeight = pdfTextHeight(pdf, companyName, textW, "Helvetica-Bold", 11);
-  const companyAddressHeight = pdfTextHeight(pdf, companyAddr, textW, "Helvetica", 7.2);
-  const registrationHeight = pdfTextHeight(pdf, regDetails, textW, "Helvetica-Bold", 6.8);
+  const companyNameHeight = pdfTextHeight(pdf, companyName, textW, "Helvetica-Bold", 10.5);
+  const companyAddressHeight = pdfTextHeight(pdf, companyAddr, textW, "Helvetica", 6.8);
+  const registrationHeight = pdfTextHeight(pdf, regDetails, textW, "Helvetica-Bold", 6.2);
   const boxHeight = Math.max(
-    logoSize + 14,
-    companyNameHeight + companyAddressHeight + registrationHeight + 24,
+    logoSize + 10,
+    companyNameHeight + companyAddressHeight + registrationHeight + 18,
   );
-  pdf.rect(L, boxTop, W, boxHeight).dash(3, { space: 3 }).stroke("#000000").undash();
+  pdf.rect(L, boxTop, W, boxHeight).dash(3, { space: 3 }).stroke("#0b0f2b").undash();
 
   if (fs.existsSync(logoPath)) {
     pdf.image(logoPath, L + 6, boxTop + Math.max(5, (boxHeight - logoSize) / 2), { fit: [logoSize, logoSize] });
   }
 
-  let ty = boxTop + 9;
-  pdf.font("Helvetica-Bold").fontSize(11).fillColor("#000000")
-    .text(companyName, textX, ty, { width: textW, height: companyNameHeight, lineGap: 1.4 });
-  ty += companyNameHeight + 6;
-  pdf.font("Helvetica").fontSize(7.2).fillColor("#000000")
-    .text(companyAddr, textX, ty, { width: textW, height: companyAddressHeight, lineGap: 1.4 });
-  ty += companyAddressHeight + 6;
-  pdf.font("Helvetica-Bold").fontSize(6.8).fillColor("#000000")
-    .text(regDetails, textX, ty, { width: textW, height: registrationHeight, lineGap: 1.4 });
+  let ty = boxTop + 7;
+  pdf.font("Helvetica-Bold").fontSize(10.5).fillColor("#0b0f2b")
+    .text(companyName, textX, ty, { width: textW, height: companyNameHeight, lineGap: 1.2 });
+  ty += companyNameHeight + 4;
+  pdf.font("Helvetica").fontSize(6.8).fillColor("#0b0f2b")
+    .text(companyAddr, textX, ty, { width: textW, height: companyAddressHeight, lineGap: 1.2 });
+  ty += companyAddressHeight + 4;
+  pdf.font("Helvetica-Bold").fontSize(6.2).fillColor("#0b0f2b")
+    .text(regDetails, textX, ty, { width: textW, height: registrationHeight, lineGap: 1.2 });
 
   return boxTop + boxHeight; // Y where body starts
 }
@@ -489,10 +568,40 @@ function pdfCompanyHeader(pdf, document, title) {
 export async function pdfBuffer(documentId, documentType = "proforma") {
   const document = await ExportDocument.findByPk(documentId, { include: { model: ExportDocumentItem, as: "items" } });
   if (!document) throw new Error("Export document not found");
-  const pdf = new PDFDocument({ size: "A4", margin: 0, autoFirstPage: true });
+  return pdfBufferFromDocument(document, documentType);
+}
+
+// Builds the export document PDF.
+//  - probe mode: renders onto a tall scratch page with pagination disabled and
+//    reports the natural (unscaled) bottom Y of the complete document.
+//  - final mode: renders onto a real A4 page, uniformly pre-scaled when needed
+//    so the entire document is guaranteed to land on exactly one page.
+async function buildExportPdf(document, documentType, { probe = false, scale = 1, naturalBottom = 0 }) {
+  const pdf = new PDFDocument({
+    size: probe ? [595.28, 14000] : "A4",
+    margin: 0,
+    autoFirstPage: true,
+  });
   const chunks = [];
   pdf.on("data", (chunk) => chunks.push(chunk));
   const finished = new Promise((resolve) => pdf.on("end", () => resolve(Buffer.concat(chunks))));
+
+  if (!probe && scale < 1) {
+    // The uniform scale shrinks every drawn element, but pdfkit's internal
+    // line-wrapper still compares UNSCALED y positions against the page's
+    // logical bottom and would silently insert extra pages. Widening the
+    // bottom margin disables that check; the CTM scale alone decides where
+    // content visually lands, keeping the output to exactly one A4 page.
+    pdf.page.margins.bottom = -20000;
+    pdf.save();
+    pdf.scale(scale, scale);
+    // Centre the shrunken document on the page instead of pinning it to the
+    // top-left corner.
+    const tx = (595.28 * (1 - scale)) / 2;
+    const ty = Math.max(0, (841.89 - scale * naturalBottom) / 2);
+    pdf.translate(tx, ty);
+  }
+
   const packing = documentType === "packing";
 
   const docTitle = packing ? "PACKING LIST"
@@ -529,7 +638,7 @@ export async function pdfBuffer(documentId, documentType = "proforma") {
   const headerBotY = pdfCompanyHeader(pdf, document, docTitle);
 
   // ── META area starts just below the header box ───────────────────────────────
-  const metaY = headerBotY + 9;
+  const metaY = headerBotY + BLOCK_GAP;
   let bodyBottomY = metaY;
 
   if (packing) {
@@ -537,23 +646,32 @@ export async function pdfBuffer(documentId, documentType = "proforma") {
     // ── PACKING LIST ─────────────────────────────────────────────────────────
     // ══════════════════════════════════════════════════════════════════════════
 
-    // Right-side meta block
-    pdf.font("Helvetica-Bold").fontSize(7.6).fillColor("#000000");
-    pdf.text(`Page:  1 of 1`,                                       L, metaY,      { width: W, align: "right" });
-    pdf.text(`Date: ${formatDocDate(document.shipment_date)}`,      L, metaY + 11, { width: W, align: "right" });
-    pdf.text(`Invoice Number: ${pdfValue(document.invoice_no)}`,    L, metaY + 22, { width: W, align: "right" });
-    pdf.text(`SHIPMENT DATE: ${formatDocDate(document.shipment_date)}`, L, metaY + 33, { width: W, align: "right" });
+    // Right-side meta block — each line advances by its measured height so a
+    // long value that wraps can never overlap the line beneath it.
+    pdf.font("Helvetica-Bold").fontSize(7.2).fillColor("#0b0f2b");
+    const packingMetaLines = [
+      `Page:  1 of 1`,
+      `Date: ${formatDocDate(document.shipment_date)}`,
+      `Invoice Number: ${pdfValue(document.invoice_no)}`,
+      `SHIPMENT DATE: ${formatDocDate(document.shipment_date)}`,
+    ];
+    let metaCurY = metaY;
+    packingMetaLines.forEach((line) => {
+      const lineH = pdfTextHeight(pdf, line, W, "Helvetica-Bold", 7.2);
+      pdf.text(line, L, metaCurY, { width: W, align: "right" });
+      metaCurY += lineH + 2;
+    });
 
     // Invoice No row + Invoice Date / File Number
-    const refY = metaY + 50;
-    pdf.font("Helvetica-Bold").fontSize(7.6).fillColor("#000000")
+    const refY = metaCurY + 6;
+    pdf.font("Helvetica-Bold").fontSize(7.2).fillColor("#0b0f2b")
       .text(`Invoice No:  ${pdfValue(document.shipment_ref_no || document.invoice_no)}`, L, refY, { width: 230 });
-    pdf.moveTo(L, refY + 13).lineTo(L + 220, refY + 13).stroke();
+    pdf.moveTo(L, refY + 11).lineTo(L + 220, refY + 11).stroke("#07105b");
     pdf.text(`Invoice Date:  ${formatDocDate(document.shipment_date)}`, L, refY,      { width: W, align: "right" });
-    pdf.text(`File Number:  ${pdfValue(document.file_number)}`,         L, refY + 13, { width: W, align: "right" });
+    pdf.text(`File Number:  ${pdfValue(document.file_number)}`,         L, refY + 11, { width: W, align: "right" });
 
     // ── SHIPPER / CONSIGNEE / BILL TO ────────────────────────────────────────
-    const partyY    = refY + 28;
+    const partyY    = refY + 22;
     const colW      = Math.floor(W / 3);        // 173
     const partyHdrH = SECTION_HEADER_H;
     const parties = [
@@ -561,33 +679,46 @@ export async function pdfBuffer(documentId, documentType = "proforma") {
       [receiverName, receiverAddress],
       [importerName, importerAddress],
     ];
-    const partyBodyH = Math.max(...parties.map(([name, addr], i) => {
+    const partyMetrics = parties.map(([name, addr], i) => {
       const cw = i === 2 ? W - colW * 2 : colW;
-      return pdfTextHeight(pdf, name, cw - 8, "Helvetica-Bold", 7.2)
-        + pdfTextHeight(pdf, addr, cw - 8, "Helvetica", 6.8) + 22;
-    }), 56);
+      return {
+        cw,
+        nameH: pdfTextHeight(pdf, name, cw - 8, "Helvetica-Bold", 7.2),
+        addrH: pdfTextHeight(pdf, addr, cw - 8, "Helvetica", 6.8),
+      };
+    });
+    const partyBodyH = Math.max(
+      ...partyMetrics.map((m) => m.nameH + m.addrH + 16),
+      46,
+    );
 
     pdfRow(pdf, partyY, L, [colW, colW, W - colW * 2], ["SHIPPER", "CONSIGNEE", "BILL TO"], partyHdrH, true);
 
-    // One continuous cell per column (name bold, address normal)
+    // One continuous cell per column (name bold, address normal). The address
+    // starts below the measured name height so wrapped names never overlap it.
     parties.forEach(([name, addr], i) => {
       const cx = L + i * colW;
       const cw = i === 2 ? W - colW * 2 : colW;
       const by = partyY + partyHdrH;
-      pdf.rect(cx, by, cw, partyBodyH).stroke();
-      pdf.font("Helvetica-Bold").fontSize(7.2).fillColor("#000000")
-        .text(name, cx + 4, by + 6, { width: cw - 8, lineGap: 1.4 });
-      pdf.font("Helvetica").fontSize(6.8).fillColor("#000000")
-        .text(addr, cx + 4, by + 19, { width: cw - 8, height: partyBodyH - 24, lineGap: 1.4 });
+      const m = partyMetrics[i];
+      pdf.rect(cx, by, cw, partyBodyH).stroke("#07105b");
+      pdf.font("Helvetica-Bold").fontSize(7.2).fillColor("#0b0f2b")
+        .text(name, cx + 4, by + 6, { width: cw - 8, height: m.nameH + 2, lineGap: 1.4 });
+      pdf.font("Helvetica").fontSize(6.8).fillColor("#0b0f2b")
+        .text(addr, cx + 4, by + 6 + m.nameH + 5, {
+          width: cw - 8,
+          height: m.addrH + 2,
+          lineGap: 1.4,
+        });
     });
 
     // ── SHIPMENT INFORMATION ─────────────────────────────────────────────────
-    const siY    = partyY + partyHdrH + partyBodyH + 7;
+    const siY    = partyY + partyHdrH + partyBodyH + 5;
     const siHdrH = SECTION_HEADER_H;
     const halfW  = Math.floor(W / 2);   // 259
 
-    pdf.rect(L, siY, W, siHdrH).fillAndStroke("#f2f2f2", "#000000");
-    pdf.fillColor("#000000").font("Helvetica-Bold").fontSize(8)
+    pdf.rect(L, siY, W, siHdrH).fillAndStroke("#eaeee7", "#0b0f2b");
+    pdf.fillColor("#0b0f2b").font("Helvetica-Bold").fontSize(7.4)
       .text("SHIPMENT INFORMATION", L, siY + 4, { width: W, align: "center" });
 
     const leftSI = [
@@ -607,36 +738,36 @@ export async function pdfBuffer(documentId, documentType = "proforma") {
       ["Gross Weight(Kg):",       document.total_net_weight_kg    || "0.00"],
     ];
     const siRowHeights = leftSI.map((entry, i) => Math.max(
-      pdfFieldHeight(pdf, entry[0], entry[1], halfW, 108, 7),
-      rightSI[i] ? pdfFieldHeight(pdf, rightSI[i][0], rightSI[i][1], W - halfW, 122, 7) : 0,
-      18,
+      pdfFieldHeight(pdf, entry[0], entry[1], halfW, 108, 6.8),
+      rightSI[i] ? pdfFieldHeight(pdf, rightSI[i][0], rightSI[i][1], W - halfW, 122, 6.8) : 0,
+      16,
     ));
 
     leftSI.forEach((entry, i) => {
       const ry = siY + siHdrH + siRowHeights.slice(0, i).reduce((sum, height) => sum + height, 0);
-      pdf.rect(L, ry, halfW, siRowHeights[i]).stroke();
-      pdfField(pdf, entry[0], entry[1], L, ry + 4, halfW, 108, 7, siRowHeights[i] - 4);
+      pdf.rect(L, ry, halfW, siRowHeights[i]).stroke("#07105b");
+      pdfField(pdf, entry[0], entry[1], L, ry + 3, halfW, 108, 6.8, siRowHeights[i] - 3);
     });
     rightSI.forEach((entry, i) => {
       const ry = siY + siHdrH + siRowHeights.slice(0, i).reduce((sum, height) => sum + height, 0);
-      pdf.rect(L + halfW, ry, W - halfW, siRowHeights[i]).stroke();
-      pdfField(pdf, entry[0], entry[1], L + halfW, ry + 4, W - halfW, 122, 7, siRowHeights[i] - 4);
+      pdf.rect(L + halfW, ry, W - halfW, siRowHeights[i]).stroke("#07105b");
+      pdfField(pdf, entry[0], entry[1], L + halfW, ry + 3, W - halfW, 122, 6.8, siRowHeights[i] - 3);
     });
     const siTotalH = siRowHeights.reduce((sum, height) => sum + height, 0);
     for (let i = rightSI.length; i < siRowHeights.length; i++) {
       const emptyY = siY + siHdrH + siRowHeights.slice(0, i)
         .reduce((sum, height) => sum + height, 0);
-      pdf.rect(L + halfW, emptyY, W - halfW, siRowHeights[i]).stroke();
+      pdf.rect(L + halfW, emptyY, W - halfW, siRowHeights[i]).stroke("#07105b");
     }
 
     // ── ITEMS TABLE ──────────────────────────────────────────────────────────
-    let curY = siY + siHdrH + siTotalH + 9;
+    let curY = siY + siHdrH + siTotalH + 7;
     const cols  = [32, 56, 210, 78, 95, 48];
-    const itemH = 19;
-    pdfRow(pdf, curY, L, cols,
-      ["NOs", "QUANTITY", "DESCRIPTION", "HSN CODE", "NET WEIGHT IN\nGRAMS", "UNIT"],
-      27, true);
-    curY += 27;
+    const itemH = 16;
+    const packingHeadValues = ["NOs", "QUANTITY", "DESCRIPTION", "HSN CODE", "NET WEIGHT IN\nGRAMS", "UNIT"];
+    const drawPackingHeader = () =>
+      pdfRow(pdf, curY, L, cols, packingHeadValues, 23, true);
+    curY += drawPackingHeader();
 
     const packingItems = Array.isArray(document.items) ? document.items : [];
     packingItems.forEach((item, i) => {
@@ -648,47 +779,49 @@ export async function pdfBuffer(documentId, documentType = "proforma") {
         (Number(item.unit_net_weight || 0) * 1000).toFixed(2),
         item.uom || "PCS",
       ];
-      const rowHeight = pdfRowHeight(pdf, cols, values, itemH);
+      const rowHeight = pdfMeasureRow(pdf, cols, values, itemH);
       pdfRow(pdf, curY, L, cols, values, rowHeight, false, ["center", "center", "left", "center", "right", "center"]);
       curY += rowHeight;
     });
 
     // 2 filler rows matching reference (N/A in each cell)
     const fillerValues = ["N/A", "N/A", "N/A", "N/A", "N/A", "N/A"];
-    pdfRow(pdf, curY, L, cols, fillerValues, itemH, false); curY += itemH;
-    pdfRow(pdf, curY, L, cols, fillerValues, itemH, false); curY += itemH;
+    for (let n = 0; n < 2; n++) {
+      if (curY + itemH > PAGE_CONTENT_BOTTOM) break;
+      pdfRow(pdf, curY, L, cols, fillerValues, itemH, false);
+      curY += itemH;
+    }
 
     // ── TOTALS TABLE ─────────────────────────────────────────────────────────
-    curY += 9;
-    pdf.font("Helvetica-Bold").fontSize(8).fillColor("#000000")
+    curY += 7;
+    pdf.font("Helvetica-Bold").fontSize(7.4).fillColor("#0b0f2b")
       .text("TOTAL:", L, curY, { width: W, align: "right" });
-    curY += 14;
+    curY += 11;
 
     const totalCols   = [75, 115, 82, 80];
     const totalStartX = R - totalCols.reduce((a, b) => a + b, 0);
-    pdfRow(pdf, curY, totalStartX, totalCols,
+    curY += pdfRow(pdf, curY, totalStartX, totalCols,
       ["NO.\nPKGS", "TOTAL GROSS\nWEIGHT\nGRAMS", "NET WEIGHT\nLBS", "NET WEIGHT\nKGS"],
-      29, true);
-    curY += 29;
-    pdfRow(pdf, curY, totalStartX, totalCols, [
+      25, true);
+    curY += pdfRow(pdf, curY, totalStartX, totalCols, [
       pdfValue(document.no_of_packages || "1"),
       (Number(document.total_net_weight_kg || 0) * 1000).toFixed(0),
       document.total_net_weight_lbs || "0",
       document.total_net_weight_kg  || "0",
-    ], 17, false, ["center", "center", "center", "center"]);
-    curY += 23;
+    ], 15, false, ["center", "center", "center", "center"]);
+    curY += 5;
 
     // ── PACKAGE DESCRIPTION ──────────────────────────────────────────────────
-    pdf.font("Helvetica-Bold").fontSize(8).fillColor("#000000")
+    pdf.font("Helvetica-Bold").fontSize(7.4).fillColor("#0b0f2b")
       .text("PACKAGE DESCRIPTION:", L, curY);
-    curY += 13;
-    const packageDescriptionHeight = Math.max(26, pdfTextHeight(pdf, document.package_description, W - 8, "Helvetica", 7.2) + 12);
-    pdf.rect(L, curY, W, packageDescriptionHeight).stroke();
-    pdf.font("Helvetica").fontSize(7.2).fillColor("#000000")
-      .text(pdfValue(document.package_description), L + 4, curY + 6, {
+    curY += 11;
+    const packageDescriptionHeight = Math.max(22, pdfTextHeight(pdf, document.package_description, W - 8, "Helvetica", 6.8) + 10);
+    pdf.rect(L, curY, W, packageDescriptionHeight).stroke("#07105b");
+    pdf.font("Helvetica").fontSize(6.8).fillColor("#0b0f2b")
+      .text(pdfValue(document.package_description), L + 4, curY + 5, {
         width: W - 8,
-        height: packageDescriptionHeight - 12,
-        lineGap: 1.4,
+        height: packageDescriptionHeight - 10,
+        lineGap: 1.3,
       });
     bodyBottomY = curY + packageDescriptionHeight;
 
@@ -697,18 +830,25 @@ export async function pdfBuffer(documentId, documentType = "proforma") {
     // ── COMMERCIAL / PROFORMA INVOICE ────────────────────────────────────────
     // ══════════════════════════════════════════════════════════════════════════
 
-    // Meta line: Date (left) | Invoice Number (center) | AWB (right)
-    pdf.font("Helvetica-Bold").fontSize(7.8).fillColor("#000000")
-      .text(`Date: ${formatDocDate(document.shipment_date)}`,        L, metaY, { width: W });
-    pdf.text(`Invoice Number: ${pdfValue(document.invoice_no)}`,     L, metaY, { width: W, align: "center" });
-    pdf.text(`Air Waybill Number: ${pdfValue(document.awb_bl_no)}`,  L, metaY, { width: W, align: "right" });
+    // Meta line: Date (left) | Invoice Number (center) | AWB (right).
+    // Each item gets its own third of the width so long values wrap inside
+    // their zone instead of colliding with the neighbours. The measured block
+    // height decides where the General Information grid starts, so wrapped
+    // meta lines can never run into it.
+    const metaZoneW = W / 3;
+    const metaDate = `Date: ${formatDocDate(document.shipment_date)}`;
+    const metaInvoiceNo = `Invoice Number: ${pdfValue(document.invoice_no)}`;
+    const metaAwb = `Air Waybill Number: ${pdfValue(document.awb_bl_no)}`;
+    const metaH = Math.max(
+      pdfTextHeight(pdf, metaDate, metaZoneW, "Helvetica-Bold", 7.4),
+      pdfTextHeight(pdf, metaInvoiceNo, metaZoneW, "Helvetica-Bold", 7.4),
+      pdfTextHeight(pdf, metaAwb, metaZoneW, "Helvetica-Bold", 7.4),
+    );
+    pdf.font("Helvetica-Bold").fontSize(7.4).fillColor("#0b0f2b");
+    pdf.text(metaDate, L, metaY, { width: metaZoneW });
+    pdf.text(metaInvoiceNo, L + metaZoneW, metaY, { width: metaZoneW, align: "center" });
+    pdf.text(metaAwb, L + metaZoneW * 2, metaY, { width: metaZoneW, align: "right" });
 
-    // ── Sender Details (left) & Shipment Details (right) ─────────────────────
-    // NOTE: labelWidths[1] is intentionally wide (124) so long labels like
-    // "Import License No.:" and "Payment Method:" never wrap, and the row
-    // heights below (via pdfFieldHeight) stay tight and predictable — that,
-    // combined with the larger SECTION_BOTTOM_PAD, is what keeps "Payment
-    // Method" (the last row here) clear of the box border beneath it.
     const senderFields = [
       ["Name:", senderName], ["Address:", senderAddress], ["Contact Number:", senderContact],
       ["Email:", senderEmail], ["Tax ID No.:", senderTaxId],
@@ -724,19 +864,6 @@ export async function pdfBuffer(documentId, documentType = "proforma") {
       ["Currency Code:",           document.currency_code     || "USD"],
       ["Payment Method:",          document.payment_method    || "Bank Transfer"],
     ];
-
-    const row1Y  = metaY + 18;
-    const halfW  = Math.floor(W / 2);   // 259
-    const row1Bottom = drawTwoColumnSection(pdf, {
-      x: L, y: row1Y, width: W,
-      colWidths: [halfW, W - halfW],
-      titles: ["Sender Details", "Shipment Details"],
-      fieldColumns: [senderFields, shipmentFields],
-      labelWidths: [88, 124],
-      fontSize: BASE_FONT,
-    });
-
-    // ── Receiver Details (left) & Importer of Record (right) ─────────────────
     const receiverFields = [
       ["Name:", receiverName], ["Address:", receiverAddress], ["Contact Number:", receiverContact],
       ["Email:", receiverEmail], ["Tax ID No.:", receiverTaxId],
@@ -746,24 +873,32 @@ export async function pdfBuffer(documentId, documentType = "proforma") {
       ["Email:", importerEmail], ["Tax ID No.:", importerTaxId],
     ];
 
-    const row2Y = row1Bottom + 8;
-    const row2Bottom = drawTwoColumnSection(pdf, {
-      x: L, y: row2Y, width: W,
-      colWidths: [halfW, W - halfW],
-      titles: ["Receiver Details", "Importer of Record Details"],
-      fieldColumns: [receiverFields, importerFields],
-      labelWidths: [88, 88],
+    const halfW  = Math.floor(W / 2);   // 259
+    const rightW = W - halfW;
+    const gridY  = metaY + metaH + 4;
+    const gridBottom = drawGeneralInformationBlock(pdf, {
+      x: L, y: gridY, width: W, halfW, rightW,
+      row1Titles: ["Sender Details", "Shipment Details"],
+      row1Columns: [senderFields, shipmentFields],
+      row1LabelWidths: [88, 124],
+      row2Titles: ["Receiver Details", "Importer of Record Details"],
+      row2Columns: [receiverFields, importerFields],
+      row2LabelWidths: [88, 88],
       fontSize: BASE_FONT,
     });
 
     // ── Items Table ───────────────────────────────────────────────────────────
-    let curY = row2Bottom + 10;
-    const cols  = [28, 148, 60, 60, 56, 56, 58, 53];
-    const itemH = 21;
-    pdfRow(pdf, curY, L, cols,
-      ["No.", "Item Description", "HS Code", "Country of\nOrigin", "Qty UOM", "Unit Value", "Sub-Total\nValue", "Unit Net\nWeight"],
-      itemH, true);
-    curY += itemH;
+    let curY = gridBottom + BLOCK_GAP;
+    const cols  = [22, 148, 52, 51, 48, 52, 54, 44, 48];
+    const itemH = 16;
+    const fillerH = 13;
+    const itemHeadValues = [
+      "No.", "Item Description", "HS Code", "Country of\nOrigin",
+      "Qty UOM", "Unit Value", "Sub-Total\nValue", "Unit Net\nWeight", "Net Weight\n(g)",
+    ];
+    const drawItemHeader = () =>
+      pdfRow(pdf, curY, L, cols, itemHeadValues, 21, true);
+    curY += drawItemHeader();
 
     const invoiceItems = Array.isArray(document.items) ? document.items : [];
     const itemCurrency = document.currency_code || "USD";
@@ -778,53 +913,58 @@ export async function pdfBuffer(documentId, documentType = "proforma") {
         `${itemCurrency} ${Number(item.unit_value || 0).toFixed(2)}`,
         `${itemCurrency} ${itemSubTotal}`,
         (Number(item.unit_net_weight || 0) * 1000).toFixed(2),
+        (Number(item.qty || 1) * Number(item.unit_net_weight || 0) * 1000).toFixed(2),
       ];
-      const rowHeight = pdfRowHeight(pdf, cols, values, itemH);
-      pdfRow(pdf, curY, L, cols, values, rowHeight, false, ["center", "left", "center", "center", "center", "right", "right", "right"]);
+      const rowHeight = pdfMeasureRow(pdf, cols, values, itemH);
+      pdfRow(pdf, curY, L, cols, values, rowHeight, false, ["center", "left", "center", "center", "center", "right", "right", "right", "right"]);
       curY += rowHeight;
     });
 
     // 2 empty filler rows
-    const emptyValues = ["", "", "", "", "", "", "", ""];
-    pdfRow(pdf, curY, L, cols, emptyValues, itemH, false); curY += itemH;
-    pdfRow(pdf, curY, L, cols, emptyValues, itemH, false); curY += itemH;
+    const emptyValues = ["", "", "", "", "", "", "", "", ""];
+    for (let n = 0; n < 2; n++) {
+      if (curY + fillerH > PAGE_CONTENT_BOTTOM) break;
+      pdfRow(pdf, curY, L, cols, emptyValues, fillerH, false);
+      curY += fillerH;
+    }
 
     // ── Compliance + Totals ───────────────────────────────────────────────────
-    curY += 7;
-    pdf.font("Helvetica-Bold").fontSize(7.8).fillColor("#000000")
+    curY += BLOCK_GAP;
+    pdf.font("Helvetica-Bold").fontSize(7.4).fillColor("#0b0f2b")
       .text("OTHER INFORMATION AND COMPLIANCE DETAILS:", L, curY);
-    curY += 13;
+    curY += 9;
 
-    const compBoxW = 305;
-    const compBoxH = Math.max(44, pdfTextHeight(pdf, complianceText, compBoxW - 8, "Helvetica", 7.2) + 13);
-    pdf.rect(L, curY, compBoxW, compBoxH).stroke();
-    pdf.font("Helvetica").fontSize(7.2).fillColor("#000000")
-      .text(complianceText, L + 4, curY + 6, {
-        width: compBoxW - 8,
-        height: compBoxH - 12,
-        lineGap: 1.4,
+    const compBoxW = 300;
+    const compBoxH = Math.max(30, pdfTextHeight(pdf, complianceText, compBoxW - 8, "Helvetica", 6.8) + 11);
+    pdf.rect(L, curY, compBoxW, compBoxH).stroke("#07105b");
+    pdf.font("Helvetica").fontSize(6.8).fillColor("#0b0f2b")
+      .text(complianceText, L + 5, curY + 5, {
+        width: compBoxW - 10,
+        height: compBoxH - 10,
+        lineGap: 1.3,
       });
 
     const currency    = document.currency_code || "USD";
     const goodsVal    = Number(document.total_goods_value || 0).toFixed(2);
     const weightGrams = (Number(document.total_net_weight_kg || 0) * 1000).toFixed(2);
-    const totalsX     = L + compBoxW + 10;
-    const totalsW     = W - compBoxW - 10;
+    const totalsX     = L + compBoxW + 12;
+    const totalsW     = W - compBoxW - 12;
+    const totalsLineH = 12;
 
-    pdf.font("Helvetica-Bold").fontSize(7.4).fillColor("#000000");
-    pdf.text("No. of Packages",   totalsX,                  curY + 6,  { width: totalsW * 0.6 });
+    pdf.font("Helvetica-Bold").fontSize(7.2).fillColor("#0b0f2b");
+    pdf.text("No. of Packages",   totalsX, curY + 3,  { width: totalsW * 0.62 });
     pdf.text(pdfValue(document.no_of_packages || "1"),
-             totalsX + totalsW * 0.6, curY + 6,  { width: totalsW * 0.4, align: "right" });
-    pdf.text("Total Goods Value", totalsX,                  curY + 21, { width: totalsW * 0.6 });
+             totalsX + totalsW * 0.62, curY + 3,  { width: totalsW * 0.38, align: "right" });
+    pdf.text("Total Goods Value", totalsX, curY + 3 + totalsLineH, { width: totalsW * 0.62 });
     pdf.text(`${currency} ${goodsVal}`,
-             totalsX + totalsW * 0.6, curY + 21, { width: totalsW * 0.4, align: "right" });
-    pdf.text("Total Weight (g)",  totalsX,                  curY + 36, { width: totalsW * 0.6 });
+             totalsX + totalsW * 0.62, curY + 3 + totalsLineH, { width: totalsW * 0.38, align: "right" });
+    pdf.text("Total Weight (g)",  totalsX, curY + 3 + totalsLineH * 2, { width: totalsW * 0.62 });
     pdf.text(`${weightGrams}`,
-             totalsX + totalsW * 0.6, curY + 36, { width: totalsW * 0.4, align: "right" });
+             totalsX + totalsW * 0.62, curY + 3 + totalsLineH * 2, { width: totalsW * 0.38, align: "right" });
 
-    curY += compBoxH + 12;
+    curY += compBoxH + 7;
 
-    // Tax / totals lines — each on its own clearly spaced line
+    // Tax / totals lines — right-aligned, clearly spaced
     const goodsAmount = Number(document.total_goods_value || 0);
     const taxRateValue = Number(document.tax_rate || 0);
     const taxAmountValue = document.tax_amount !== null && document.tax_amount !== undefined && document.tax_amount !== ""
@@ -837,59 +977,74 @@ export async function pdfBuffer(documentId, documentType = "proforma") {
     const taxAmt   = taxAmountValue.toFixed(2);
     const finalVal = finalAmountValue.toFixed(2);
     const wordsVal = document.total_amount_words || numberToWords(finalVal, currency);
-    const taxLabel = document.tax_type ? `Tax (${document.tax_type})` : "Tax";
+    const taxTypeLabel = document.tax_type || "Tax";
+    const taxLineLabel = taxRateValue > 0
+      ? `Tax (${taxTypeLabel} @ ${taxRate}%): ${currency} ${taxAmt}`
+      : `${taxTypeLabel}: ${currency} ${taxAmt}`;
 
-    pdf.font("Helvetica-Bold").fontSize(7.8).fillColor("#000000");
-    pdf.text(`Tax Percentage: ${taxRate}%`, L, curY, { width: W, align: "right" });
-    curY += 13;
-    pdf.text(`${taxLabel}: ${currency} ${taxAmt}`, L, curY, { width: W, align: "right" });
-    curY += 13;
+    pdf.font("Helvetica-Bold").fontSize(7.4).fillColor("#0b0f2b");
+    if (taxRateValue > 0 || taxAmountValue > 0) {
+      pdf.text(taxLineLabel, L, curY, { width: W, align: "right" });
+      curY += 11;
+    }
     pdf.text(`Final Total Amount: ${currency} ${finalVal}`, L, curY, { width: W, align: "right" });
-    curY += 16;
+    curY += 11;
 
-    const wordsHeight = pdfTextHeight(pdf, `Amount in Words: ${wordsVal}`, W, "Helvetica-BoldOblique", 7.8);
-    pdf.font("Helvetica-BoldOblique").fontSize(7.8)
-      .text(`Amount in Words: ${wordsVal}`, L, curY, { width: W, lineGap: 1.4 });
-    curY += wordsHeight + 9;
+    const wordsHeight = pdfTextHeight(pdf, `Amount in Words: ${wordsVal}`, W, "Helvetica-BoldOblique", 7.4);
+    pdf.font("Helvetica-BoldOblique").fontSize(7.4)
+      .text(`Amount in Words: ${wordsVal}`, L, curY, { width: W, lineGap: 1.3 });
+    curY += wordsHeight + 5;
 
     // Certify
     const certifyText = "I/We certify the information on this invoice is true and correct and that the contents of this shipment are as stated above.";
-    const certifyHeight = pdfTextHeight(pdf, certifyText, W, "Helvetica", 7.4);
-    pdf.font("Helvetica").fontSize(7.4).fillColor("#000000")
-      .text(certifyText, L, curY, { width: W, lineGap: 1.4 });
-    bodyBottomY = curY + certifyHeight + 6;
+    const certifyHeight = pdfTextHeight(pdf, certifyText, W, "Helvetica", 7);
+    pdf.font("Helvetica").fontSize(7).fillColor("#0b0f2b")
+      .text(certifyText, L, curY, { width: W, lineGap: 1.3 });
+    bodyBottomY = curY + certifyHeight + 2;
   }
 
   // ══════════════════════════════════════════════════════════════════════════════
   // ── SIGNATURE FOOTER (shared across all 3 document types) ───────────────────
   // ══════════════════════════════════════════════════════════════════════════════
-  // Keep a modest, consistent gap above the signature block, and fall back to
-  // a fresh page only if the content genuinely can't fit — this keeps normal
-  // documents on a single page while still being safe for unusually long data.
-  let sigY = bodyBottomY + 18;
+  // No page-break fallback here: the scale-to-fit pass guarantees the whole
+  // document (signature included) stays on a single physical page.
+  const sigY = bodyBottomY + SIGNATURE_GAP;
   const signatureWidth = R - L - 160;
-  const signatureNameHeight = pdfTextHeight(pdf, signatoryName, signatureWidth, "Helvetica", 7.8);
-  const signatureDesignationHeight = pdfTextHeight(pdf, signatoryDesig, signatureWidth, "Helvetica", 7.8);
-  const signatureBottom = sigY + 26 + signatureNameHeight + signatureDesignationHeight + 16;
-  if (signatureBottom > 828) {
-    pdf.addPage();
-    sigY = 45;
-  }
-  pdf.font("Helvetica-Bold").fontSize(7.8).fillColor("#000000").text("Signature:", L, sigY);
-  pdf.moveTo(L + 80, sigY + 11).lineTo(R - 80, sigY + 11).stroke();
+  const signatureNameHeight = pdfTextHeight(pdf, signatoryName, signatureWidth, "Helvetica", 7.2);
+  const signatureDesignationHeight = pdfTextHeight(pdf, signatoryDesig, signatureWidth, "Helvetica", 7.2);
+  pdf.font("Helvetica-Bold").fontSize(7.2).fillColor("#0b0f2b").text("Signature:", L, sigY);
+  pdf.moveTo(L + 80, sigY + 9).lineTo(R - 80, sigY + 9).stroke("#07105b");
 
-  const nameY = sigY + 21;
+  const nameY = sigY + 15;
   pdf.font("Helvetica-Bold").text("Name:", L, nameY);
-  pdf.font("Helvetica").text(signatoryName, L + 80, nameY, { width: signatureWidth, height: signatureNameHeight, lineGap: 1.4 });
-  const designationY = nameY + signatureNameHeight + 7;
-  pdf.moveTo(L + 80, designationY - 4).lineTo(R - 80, designationY - 4).stroke();
+  pdf.font("Helvetica").text(signatoryName, L + 80, nameY, { width: signatureWidth, height: signatureNameHeight, lineGap: 1.3 });
+  const designationY = nameY + signatureNameHeight + 5;
+  pdf.moveTo(L + 80, designationY - 2).lineTo(R - 80, designationY - 2).stroke("#07105b");
 
   pdf.font("Helvetica-Bold").text("Designation/Title:", L, designationY);
-  pdf.font("Helvetica").text(signatoryDesig, L + 80, designationY, { width: signatureWidth, height: signatureDesignationHeight, lineGap: 1.4 });
-  pdf.moveTo(L + 80, designationY + signatureDesignationHeight + 7).lineTo(R - 80, designationY + signatureDesignationHeight + 7).stroke();
+  pdf.font("Helvetica").text(signatoryDesig, L + 80, designationY, { width: signatureWidth, height: signatureDesignationHeight, lineGap: 1.3 });
+  pdf.moveTo(L + 80, designationY + signatureDesignationHeight + 5).lineTo(R - 80, designationY + signatureDesignationHeight + 5).stroke("#07105b");
 
+  const bottomY = designationY + signatureDesignationHeight + 8;
+
+  if (!probe && scale < 1) pdf.restore();
   pdf.end();
-  return finished;
+  return { buffer: await finished, bottomY };
+}
+
+export async function pdfBufferFromDocument(document, documentType = "proforma") {
+  // Pass 1 — measure the natural, unscaled height of the complete document.
+  const { bottomY: naturalBottom } = await buildExportPdf(document, documentType, { probe: true });
+
+  // Pass 2 — render onto A4. Only when the natural layout would not fit a
+  // single page is the whole document shrunk uniformly (fonts, tables and logo
+  // scale together), so no content is ever dropped or split across pages.
+  let scale = 1;
+  if (naturalBottom > PAGE_CONTENT_BOTTOM) {
+    scale = Math.max(0.35, Math.min(1, SINGLE_PAGE_BOTTOM_LIMIT / naturalBottom));
+  }
+  const { buffer } = await buildExportPdf(document, documentType, { scale, naturalBottom });
+  return buffer;
 }
 
 export async function emailInvoice(document) {

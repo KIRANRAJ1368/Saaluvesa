@@ -211,7 +211,6 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.22s ease, background 0.2s ease, transform 0.22s ease;
-  /* keep transform baseline for translateY(-50%) */
 }
 
 .product-card__slider-arrow svg {
@@ -317,10 +316,15 @@
   width: max-content;
 }
 
-/* ── Individual slide ── */
+/*
+ * ── Individual slide ──
+ * Width is set via inline style from JS (measured from the real
+ * viewport element), which is what fixes the clipped-card bug.
+ * This fallback only applies for the brief instant before the JS
+ * measurement effect runs.
+ */
 .products-carousel__slide {
-  /* ~3 cards visible on desktop (subtract gaps) */
-  width: calc((min(1400px, 100vw - clamp(32px, 7vw, 80px)) - clamp(40px, 6vw, 64px)) / 3);
+  width: min(340px, 80vw);
   flex-shrink: 0;
   scroll-snap-align: start;
   display: flex;
@@ -352,7 +356,6 @@
   color: #fff;
   cursor: pointer;
   transition: background 0.22s ease, border-color 0.22s ease, opacity 0.22s ease, transform 0.22s ease;
-  /* Override global button reset */
   font-family: inherit;
 }
 
@@ -410,12 +413,8 @@
   transform: none;
 }
 
-/* ── Tablet: 2 cards visible ── */
+/* ── Tablet: 2 cards visible (arrow position only — width is set by JS) ── */
 @media (max-width: 960px) {
-  .products-carousel__slide {
-    width: calc((100vw - clamp(32px, 7vw, 80px) - clamp(20px, 3vw, 32px)) / 2);
-  }
-
   .products-carousel__arrow--left {
     left: -16px;
   }
@@ -425,13 +424,8 @@
   }
 }
 
-/* ── Mobile: 1 card + peek at next ── */
+/* ── Mobile: 1 card + peek at next (arrow size/position only — width is set by JS) ── */
 @media (max-width: 600px) {
-  .products-carousel__slide {
-    /* Show 1 full card + 10% peek of next */
-    width: calc(90vw - 40px);
-  }
-
   .products-carousel__arrow {
     width: 36px;
     height: 36px;
@@ -450,4 +444,3 @@
     right: -10px;
   }
 }
-

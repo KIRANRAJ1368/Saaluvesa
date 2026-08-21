@@ -595,7 +595,7 @@ function Dashboard() {
           <p className="admin-eyebrow">Overview</p>
           <h2>Dashboard</h2>
         </div>
-        <p>Live snapshot of your catalogue and export documents.</p>
+        {/* <p>Live snapshot of your catalogue and export documents.</p> */}
       </div>
 
       <div className="admin-grid admin-grid--stats">
@@ -1504,7 +1504,7 @@ function ExportDocumentPreview({ document, type }) {
         <td>
           <b>{item.product_name}</b>
           {(item.size || item.color) && (
-            <div style={{ fontSize: "10px", color: "#555" }}>
+            <div style={{ fontSize: "10px", color: "var(--admin-ink-soft)" }}>
               {[item.size && `- Size: ${item.size}`, item.color && `Color: ${item.color}`].filter(Boolean).join(" ")}
             </div>
           )}
@@ -1519,7 +1519,7 @@ function ExportDocumentPreview({ document, type }) {
         <td>
           {item.product_name}
           {(item.size || item.color) && (
-            <div style={{ fontSize: "10px", color: "#555" }}>
+            <div style={{ fontSize: "10px", color: "var(--admin-ink-soft)" }}>
               {[item.size && `- Size: ${item.size}`, item.color && `Color: ${item.color}`].filter(Boolean).join(" ")}
             </div>
           )}
@@ -1530,6 +1530,7 @@ function ExportDocumentPreview({ document, type }) {
         <td>${Number(item.unit_value || 0).toFixed(2)}</td>
         <td>${Number(item.sub_total || Number(item.qty || 1) * Number(item.unit_value || 0) || 0).toFixed(2)}</td>
         <td>{(Number(item.unit_net_weight || 0) * 1000).toFixed(2)}</td>
+        <td>{(Number(item.qty || 1) * Number(item.unit_net_weight || 0) * 1000).toFixed(2)}</td>
       </tr>
     )
   );
@@ -1688,15 +1689,15 @@ function ExportDocumentPreview({ document, type }) {
             {isPacking ? (
               <><th>NOs</th><th>QUANTITY</th><th>DESCRIPTION</th><th>HSN CODE</th><th>NET WEIGHT IN<br />GRAMS</th><th>UNIT</th></>
             ) : (
-              <><th>No.</th><th>Item Description</th><th>HS Code</th><th>Country of<br />Origin</th><th>Qty UOM</th><th>Unit Value</th><th>Sub-Total<br />Value</th><th>Unit Net<br />Weight</th></>
+              <><th>No.</th><th>Item Description</th><th>HS Code</th><th>Country of<br />Origin</th><th>Qty UOM</th><th>Unit Value</th><th>Sub-Total<br />Value</th><th>Unit Net<br />Weight</th><th>Net Weight<br />(g)</th></>
             )}
           </tr>
         </thead>
         <tbody>
           {itemRows}
           {/* blank filler rows to match the image */}
-          <tr><td colSpan={isPacking ? 6 : 8} style={{ height: "20px" }}></td></tr>
-          <tr><td colSpan={isPacking ? 6 : 8} style={{ height: "20px" }}></td></tr>
+          <tr><td colSpan={isPacking ? 6 : 9} style={{ height: "20px" }}></td></tr>
+          <tr><td colSpan={isPacking ? 6 : 9} style={{ height: "20px" }}></td></tr>
         </tbody>
       </table>
 
@@ -2242,7 +2243,7 @@ function ExportDocuments() {
                     </td>
                     <td onClick={(e) => e.stopPropagation()}>
                       <div className="admin-actions-cell">
-                        <button
+                        {/* <button
                           type="button"
                           className="admin-action-btn admin-action-btn--view"
                           onClick={() => openViewModal(doc)}
@@ -2250,7 +2251,7 @@ function ExportDocuments() {
                         >
                           <Icon name="eye" size={14} />
                           <span>View</span>
-                        </button>
+                        </button> */}
                         <button
                           type="button"
                           className="admin-action-btn admin-action-btn--edit"
@@ -2314,7 +2315,7 @@ function ExportDocuments() {
             <div className="export-form-section__head">
               <div>
                 <h3>1. Sender Details</h3>
-                <p>Company information appearing as the exporter / shipper</p>
+                {/* <p>Company information appearing as the exporter / shipper</p> */}
               </div>
             </div>
             <div className="admin-form-grid">
@@ -2377,19 +2378,19 @@ function ExportDocuments() {
             <div className="export-form-section__head">
               <div>
                 <h3>2. Importer of Record Details</h3>
-                <p>Primary international customer or billing recipient</p>
+                {/* <p>Primary international customer or billing recipient</p> */}
               </div>
             </div>
             <div className="admin-form-grid">
               <div className="admin-field">
                 <label>
-                  Importer Name <span>required</span>
+                  Importer Name
                 </label>
                 <input
                   required
                   value={formState.importer_name}
                   onChange={(e) => handleFieldChange("importer_name", e.target.value)}
-                  placeholder="Customer / Importer company name"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2398,7 +2399,7 @@ function ExportDocuments() {
                   type="email"
                   value={formState.importer_email}
                   onChange={(e) => handleFieldChange("importer_email", e.target.value)}
-                  placeholder="buyer@example.com"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field admin-field--full">
@@ -2407,7 +2408,7 @@ function ExportDocuments() {
                   rows="2"
                   value={formState.importer_address}
                   onChange={(e) => handleFieldChange("importer_address", e.target.value)}
-                  placeholder="Full international billing address"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2415,7 +2416,7 @@ function ExportDocuments() {
                 <input
                   value={formState.importer_contact}
                   onChange={(e) => handleFieldChange("importer_contact", e.target.value)}
-                  placeholder="+1 555-0199"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2423,7 +2424,7 @@ function ExportDocuments() {
                 <input
                   value={formState.importer_tax_id}
                   onChange={(e) => handleFieldChange("importer_tax_id", e.target.value)}
-                  placeholder="VAT / EIN / Tax registration"
+                  placeholder=""
                 />
               </div>
             </div>
@@ -2434,7 +2435,6 @@ function ExportDocuments() {
             <div className="export-form-section__head">
               <div>
                 <h3>3. Recipient / User Data Details</h3>
-                <p>Consignee / delivery details (leave blank if same as Importer)</p>
               </div>
             </div>
             <div className="admin-form-grid">
@@ -2443,7 +2443,7 @@ function ExportDocuments() {
                 <input
                   value={formState.receiver_name}
                   onChange={(e) => handleFieldChange("receiver_name", e.target.value)}
-                  placeholder="Consignee company or recipient name"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2452,7 +2452,7 @@ function ExportDocuments() {
                   type="email"
                   value={formState.receiver_email}
                   onChange={(e) => handleFieldChange("receiver_email", e.target.value)}
-                  placeholder="consignee@example.com"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field admin-field--full">
@@ -2461,7 +2461,7 @@ function ExportDocuments() {
                   rows="2"
                   value={formState.receiver_address}
                   onChange={(e) => handleFieldChange("receiver_address", e.target.value)}
-                  placeholder="Consignee destination shipping address"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2469,7 +2469,7 @@ function ExportDocuments() {
                 <input
                   value={formState.receiver_contact}
                   onChange={(e) => handleFieldChange("receiver_contact", e.target.value)}
-                  placeholder="Receiver phone number"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2477,7 +2477,7 @@ function ExportDocuments() {
                 <input
                   value={formState.receiver_tax_id}
                   onChange={(e) => handleFieldChange("receiver_tax_id", e.target.value)}
-                  placeholder="Receiver tax ID"
+                  placeholder=""
                 />
               </div>
             </div>
@@ -2488,19 +2488,19 @@ function ExportDocuments() {
             <div className="export-form-section__head">
               <div>
                 <h3>4. General Information / Shipment Information</h3>
-                <p>Shipment reference, dates, incoterms, and financial metadata</p>
+                {/* <p>Shipment reference, dates, incoterms, and financial metadata</p> */}
               </div>
             </div>
             <div className="admin-form-grid">
               <div className="admin-field">
                 <label>
-                  Invoice No. <span>required</span>
+                  Invoice No.
                 </label>
                 <input
                   required
                   value={formState.invoice_no}
                   onChange={(e) => handleFieldChange("invoice_no", e.target.value)}
-                  placeholder="INV-202608-0014"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2516,7 +2516,7 @@ function ExportDocuments() {
                 <input
                   value={formState.shipment_ref_no}
                   onChange={(e) => handleFieldChange("shipment_ref_no", e.target.value)}
-                  placeholder="REF-1002"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2524,7 +2524,7 @@ function ExportDocuments() {
                 <input
                   value={formState.reason_for_export}
                   onChange={(e) => handleFieldChange("reason_for_export", e.target.value)}
-                  placeholder="Commercial"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2532,7 +2532,7 @@ function ExportDocuments() {
                 <input
                   value={formState.type_of_export}
                   onChange={(e) => handleFieldChange("type_of_export", e.target.value)}
-                  placeholder="Permanent"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2540,7 +2540,7 @@ function ExportDocuments() {
                 <input
                   value={formState.export_license_no}
                   onChange={(e) => handleFieldChange("export_license_no", e.target.value)}
-                  placeholder="Optional"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2548,7 +2548,7 @@ function ExportDocuments() {
                 <input
                   value={formState.import_license_no}
                   onChange={(e) => handleFieldChange("import_license_no", e.target.value)}
-                  placeholder="Optional"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2556,7 +2556,7 @@ function ExportDocuments() {
                 <input
                   value={formState.incoterms}
                   onChange={(e) => handleFieldChange("incoterms", e.target.value)}
-                  placeholder="DAP / FOB / EXW"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2583,7 +2583,7 @@ function ExportDocuments() {
                 <input
                   value={formState.payment_method}
                   onChange={(e) => handleFieldChange("payment_method", e.target.value)}
-                  placeholder="Bank Transfer"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2591,7 +2591,7 @@ function ExportDocuments() {
                 <input
                   value={formState.letter_of_credit_no}
                   onChange={(e) => handleFieldChange("letter_of_credit_no", e.target.value)}
-                  placeholder="LC-8823"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2599,7 +2599,7 @@ function ExportDocuments() {
                 <input
                   value={formState.customer_po_no}
                   onChange={(e) => handleFieldChange("customer_po_no", e.target.value)}
-                  placeholder="PO-2026-44"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2615,19 +2615,19 @@ function ExportDocuments() {
                 <input
                   value={formState.file_number}
                   onChange={(e) => handleFieldChange("file_number", e.target.value)}
-                  placeholder="FN-902"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
-                <label>Tax / VAT Type</label>
+                <label>Tax\Type GST</label>
                 <input
                   value={formState.tax_type}
                   onChange={(e) => handleFieldChange("tax_type", e.target.value)}
-                  placeholder="e.g. GST, VAT, IGST"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
-                <label>Tax Rate (%)</label>
+                <label>Tax (%)</label>
                 <input
                   type="number"
                   min="0"
@@ -2635,7 +2635,7 @@ function ExportDocuments() {
                   step="0.01"
                   value={formState.tax_rate}
                   onChange={(e) => handleFieldChange("tax_rate", e.target.value)}
-                  placeholder="0.00"
+                  placeholder=""
                 />
               </div>
             </div>
@@ -2645,8 +2645,8 @@ function ExportDocuments() {
           <div className="export-form-section">
             <div className="export-form-section__head">
               <div>
-                <h3 style={{ color: "#2563eb" }}>Packing / Item Details</h3>
-                <p>Mode of transportation, packages, and logistics compliance</p>
+                <h3 style={{ color: "var(--admin-navy)" }}>Packing / Item Details</h3>
+                {/* <p>Mode of transportation, packages, and logistics compliance</p> */}
               </div>
             </div>
             <div className="admin-form-grid">
@@ -2655,7 +2655,7 @@ function ExportDocuments() {
                 <input
                   value={formState.mode_of_transportation}
                   onChange={(e) => handleFieldChange("mode_of_transportation", e.target.value)}
-                  placeholder="Air"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2663,7 +2663,7 @@ function ExportDocuments() {
                 <input
                   value={formState.transportation_terms}
                   onChange={(e) => handleFieldChange("transportation_terms", e.target.value)}
-                  placeholder="EXW"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2671,7 +2671,7 @@ function ExportDocuments() {
                 <input
                   value={formState.awb_bl_no}
                   onChange={(e) => handleFieldChange("awb_bl_no", e.target.value)}
-                  placeholder="Air Waybill or BL No."
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2682,7 +2682,7 @@ function ExportDocuments() {
                   step="1"
                   value={formState.no_of_packages}
                   onChange={(e) => handleFieldChange("no_of_packages", e.target.value)}
-                  placeholder="1"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field admin-field--full">
@@ -2710,7 +2710,7 @@ function ExportDocuments() {
                 <input
                   value={formState.hs_code}
                   onChange={(e) => handleFieldChange("hs_code", e.target.value)}
-                  placeholder="84433210"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field">
@@ -2718,7 +2718,7 @@ function ExportDocuments() {
                 <input
                   value={formState.country_of_origin}
                   onChange={(e) => handleFieldChange("country_of_origin", e.target.value)}
-                  placeholder="India"
+                  placeholder=""
                 />
               </div>
               <div className="admin-field admin-field--full">
@@ -2738,9 +2738,9 @@ function ExportDocuments() {
             <div className="export-items-header">
               <div>
                 <h3 style={{ margin: 0, color: "var(--admin-navy)" }}>6. Product Details</h3>
-                <p style={{ margin: "2px 0 0", color: "var(--admin-ink-soft)", fontSize: "0.78rem" }}>
+                {/* <p style={{ margin: "2px 0 0", color: "var(--admin-ink-soft)", fontSize: "0.78rem" }}>
                   Add products with Product Name, Quantity, and Price ({formState.currency_code || "USD"})
-                </p>
+                </p> */}
               </div>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button
@@ -2873,7 +2873,7 @@ function ExportDocuments() {
             <div className="export-form-section__head">
               <div>
                 <h3>7. Individual Product Unit Net Weights</h3>
-                <p>Enter the unit net weight in grams for each added product</p>
+                {/* <p>Enter the unit net weight in grams for each added product</p> */}
               </div>
             </div>
             <div className="admin-form-grid">
@@ -2900,7 +2900,7 @@ function ExportDocuments() {
             <div className="export-form-section__head">
               <div>
                 <h3>8. Signatory Details</h3>
-                <p>Authorized signature and designation</p>
+                {/* <p>Authorized signature and designation</p> */}
               </div>
             </div>
             <div className="admin-form-grid">
@@ -2974,8 +2974,8 @@ function ExportDocuments() {
           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 24, marginBottom: 16 }}>
             <button
               type="submit"
-              className="admin-btn admin-btn--primary"
-              style={{ padding: "10px 22px", fontSize: "0.92rem", fontWeight: 600, background: "#2563eb", borderColor: "#2563eb" }}
+              className="admin-btn admin-btn--primary export-save-details"
+              style={{ padding: "10px 22px", fontSize: "0.92rem", fontWeight: 600, background: "var(--admin-navy)", borderColor: "var(--admin-navy)" }}
               disabled={saving}
             >
               {saving ? <Spinner size={16} /> : <Icon name="save" size={16} />}
@@ -2991,20 +2991,20 @@ function ExportDocuments() {
               gap: "20px",
               marginTop: "20px",
               paddingTop: "20px",
-              borderTop: "1px solid #e5e7eb",
+              borderTop: "1px solid var(--admin-line)",
               textAlign: "center",
             }}
           >
             {/* Commercial Invoice */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
-              <strong style={{ color: "#2563eb", fontSize: "14px", fontWeight: 700 }}>Commercial Invoice</strong>
+              <strong style={{ color: "var(--admin-navy)", fontSize: "14px", fontWeight: 700 }}>Commercial Invoice</strong>
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                 <button
                   type="button"
                   style={{
                     background: "none",
                     border: "none",
-                    color: "#2563eb",
+                    color: "var(--admin-navy)",
                     fontSize: "13px",
                     fontWeight: 600,
                     cursor: "pointer",
@@ -3024,10 +3024,10 @@ function ExportDocuments() {
                 <button
                   type="button"
                   style={{
-                    background: "#2563eb",
+                    background: "var(--admin-navy)",
                     border: "none",
                     borderRadius: "6px",
-                    color: "#ffffff",
+                    color: "var(--admin-white)",
                     fontSize: "13px",
                     fontWeight: 700,
                     cursor: "pointer",
@@ -3053,14 +3053,14 @@ function ExportDocuments() {
 
             {/* Proforma Invoice */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
-              <strong style={{ color: "#f97316", fontSize: "14px", fontWeight: 700 }}>Proforma Invoice</strong>
+              <strong style={{ color: "var(--admin-navy)", fontSize: "14px", fontWeight: 700 }}>Proforma Invoice</strong>
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                 <button
                   type="button"
                   style={{
                     background: "none",
                     border: "none",
-                    color: "#f97316",
+                    color: "var(--admin-navy)",
                     fontSize: "13px",
                     fontWeight: 600,
                     cursor: "pointer",
@@ -3080,10 +3080,10 @@ function ExportDocuments() {
                 <button
                   type="button"
                   style={{
-                    background: "#f97316",
+                    background: "var(--admin-navy)",
                     border: "none",
                     borderRadius: "6px",
-                    color: "#ffffff",
+                    color: "var(--admin-white)",
                     fontSize: "13px",
                     fontWeight: 700,
                     cursor: "pointer",
@@ -3109,14 +3109,14 @@ function ExportDocuments() {
 
             {/* Packing List */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
-              <strong style={{ color: "#0d9488", fontSize: "14px", fontWeight: 700 }}>Packing List</strong>
+              <strong style={{ color: "var(--admin-navy)", fontSize: "14px", fontWeight: 700 }}>Packing List</strong>
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                 <button
                   type="button"
                   style={{
                     background: "none",
                     border: "none",
-                    color: "#0d9488",
+                    color: "var(--admin-navy)",
                     fontSize: "13px",
                     fontWeight: 600,
                     cursor: "pointer",
@@ -3136,10 +3136,10 @@ function ExportDocuments() {
                 <button
                   type="button"
                   style={{
-                    background: "#0d9488",
+                    background: "var(--admin-navy)",
                     border: "none",
                     borderRadius: "6px",
-                    color: "#ffffff",
+                    color: "var(--admin-white)",
                     fontSize: "13px",
                     fontWeight: 700,
                     cursor: "pointer",
@@ -3426,7 +3426,7 @@ function ExportDocuments() {
                 <span>Download PDF</span>
               </button>
             </div>
-            <div style={{ border: "1px solid var(--admin-line)", borderRadius: 8, padding: 12, background: "#ffffff", overflowX: "auto" }}>
+            <div style={{ border: "1px solid var(--admin-line)", borderRadius: 8, padding: 12, background: "var(--admin-white)", overflowX: "auto" }}>
               <ExportDocumentPreview document={viewingDoc} type={viewingHtmlType} />
             </div>
           </div>
@@ -3511,7 +3511,7 @@ function Contacts() {
           <p className="admin-eyebrow">Customer desk</p>
           <h2>Contact submissions</h2>
         </div>
-        <p>Review and respond to customer requirements from one place.</p>
+        {/* <p>Review and respond to customer requirements from one place.</p> */}
       </div>
 
       <div className="admin-toolbar">

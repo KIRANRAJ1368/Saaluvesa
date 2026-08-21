@@ -156,37 +156,83 @@ function ProductCard({ p, i }) {
 
 /**
  * Horizontal drag-and-click carousel with left/right arrow navigation.
- * Shows ~3 cards at a time on desktop, 2 on tablet, 1.2 on mobile.
+ * Shows ~3 cards at a time on desktop, 2 on tablet, 1 (+peek) on mobile.
  * Arrows are disabled at the start/end of the list.
+ *
+ * Slide width is measured directly from the rendered viewport element
+ * (clientWidth, minus its own padding) rather than derived from a
+ * vw-based CSS formula. vw includes the page scrollbar and doesn't
+ * necessarily match the real content width of `.wrap`, which is what
+ * was causing the right-most card to be clipped at the edge of the
+ * viewport. Measuring the real element removes that mismatch entirely.
  */
 function ProductCarousel({ products }) {
-  const trackRef = useRef(null);
+  const viewportRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [cardWidth, setCardWidth] = useState(0);
+  const [slideWidth, setSlideWidth] = useState(0);
+  const [cardWidth, setCardWidth] = useState(0); // slideWidth + gap, used for scroll math
 
-  // Measure a single card's width (including gap) from the track
-  const measureCard = useCallback(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    const firstCard = track.querySelector(".product-card");
-    if (!firstCard) return;
-    const gap = parseFloat(getComputedStyle(track).gap) || 0;
-    setCardWidth(firstCard.offsetWidth + gap);
-  }, []);
+  const recomputeLayout = useCallback(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const trackEl = viewport.querySelector(".products-carousel__track");
+    const viewportStyles = getComputedStyle(viewport);
+    const paddingX =
+      (parseFloat(viewportStyles.paddingLeft) || 0) +
+      (parseFloat(viewportStyles.paddingRight) || 0);
+
+    // Real available width for the track's children — not 100vw.
+    const containerWidth = viewport.clientWidth - paddingX;
+    if (containerWidth <= 0) return;
+
+    const gap = trackEl ? parseFloat(getComputedStyle(trackEl).gap) || 0 : 0;
+
+    let count = 3;
+    if (window.innerWidth <= 600) {
+      count = 1;
+    } else if (window.innerWidth <= 960) {
+      count = 2;
+    }
+
+    let width;
+    if (count === 1) {
+      // Mobile: show one full card with a small peek of the next one
+      width = containerWidth * 0.88;
+    } else {
+      width = (containerWidth - gap * (count - 1)) / count;
+    }
+
+    setSlideWidth(width);
+    setCardWidth(width + gap);
+    setActiveIndex((idx) => Math.max(0, Math.min(idx, products.length - 1)));
+  }, [products.length]);
 
   useEffect(() => {
-    measureCard();
-    window.addEventListener("resize", measureCard);
-    return () => window.removeEventListener("resize", measureCard);
-  }, [measureCard]);
+    recomputeLayout();
+
+    const handleResize = () => recomputeLayout();
+    window.addEventListener("resize", handleResize);
+
+    let resizeObserver;
+    if (typeof ResizeObserver !== "undefined" && viewportRef.current) {
+      resizeObserver = new ResizeObserver(() => recomputeLayout());
+      resizeObserver.observe(viewportRef.current);
+    }
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (resizeObserver) resizeObserver.disconnect();
+    };
+  }, [recomputeLayout]);
 
   // Scroll by one card in either direction
   const scrollTo = useCallback(
     (index) => {
       const clamped = Math.max(0, Math.min(index, products.length - 1));
       setActiveIndex(clamped);
-      if (trackRef.current && cardWidth > 0) {
-        trackRef.current.scrollTo({ left: clamped * cardWidth, behavior: "smooth" });
+      if (viewportRef.current && cardWidth > 0) {
+        viewportRef.current.scrollTo({ left: clamped * cardWidth, behavior: "smooth" });
       }
     },
     [cardWidth, products.length],
@@ -194,8 +240,8 @@ function ProductCarousel({ products }) {
 
   // Sync activeIndex when the user drags/scrolls manually
   const onScroll = useCallback(() => {
-    if (!trackRef.current || cardWidth === 0) return;
-    const scrollLeft = trackRef.current.scrollLeft;
+    if (!viewportRef.current || cardWidth === 0) return;
+    const scrollLeft = viewportRef.current.scrollLeft;
     const nearestIndex = Math.round(scrollLeft / cardWidth);
     setActiveIndex(Math.max(0, Math.min(nearestIndex, products.length - 1)));
   }, [cardWidth, products.length]);
@@ -221,12 +267,16 @@ function ProductCarousel({ products }) {
       {/* Scrollable track */}
       <div
         className="products-carousel__viewport"
-        ref={trackRef}
+        ref={viewportRef}
         onScroll={onScroll}
       >
         <div className="products-carousel__track">
           {products.map((p, i) => (
-            <div className="products-carousel__slide" key={p.id}>
+            <div
+              className="products-carousel__slide"
+              key={p.id}
+              style={slideWidth ? { width: `${slideWidth}px` } : undefined}
+            >
               <ProductCard p={p} i={i} />
             </div>
           ))}

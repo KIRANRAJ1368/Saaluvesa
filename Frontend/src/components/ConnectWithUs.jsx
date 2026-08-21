@@ -19,7 +19,7 @@ export default function ConnectWithUs() {
           <p>
             In addition to apparel, we are also open to the export of any product as per
             your submitted requirements. We ensure reliable sourcing, verification, and
-            delivery to meet your business requirements.
+            delivery to meet your business requirements, with our own branding.
           </p>
           <Link to="/products" className="btn btn--mint">
             View Our Products

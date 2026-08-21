@@ -3651,6 +3651,10 @@
   border-top: 1px solid var(--admin-line);
 }
 
+.export-save-details:hover {
+  color: var(--admin-white);
+}
+
 @media (max-width: 900px) {
   .export-view-downloads {
     grid-template-columns: 1fr;
@@ -3660,25 +3664,25 @@
   }
 }
 
-.export-preview { color: #000; font-family: Arial, sans-serif; font-size: 12px; }
+.export-preview { color: var(--admin-ink); font-family: Arial, sans-serif; font-size: 12px; background: var(--admin-white); }
 .export-preview__header { padding: 10px 0 24px; text-align: center; }
 .export-preview__header h1 { margin: 0 0 22px; font-size: 22px; }
 .export-preview__header h2 { margin: 0 0 6px; font-size: 16px; }
 .export-preview__header p, .export-preview p { margin: 3px 0; }
-.export-preview__meta { display: flex; justify-content: space-between; gap: 14px; border-block: 1px solid #111; padding: 8px 4px; font-weight: 700; }
+.export-preview__meta { display: flex; justify-content: space-between; gap: 14px; border-block: 1px solid var(--admin-navy); padding: 8px 4px; font-weight: 700; }
 .export-preview__grid { display: grid; grid-template-columns: 1fr 1fr; }
 .export-preview__grid--three { grid-template-columns: repeat(3, 1fr); }
-.export-preview__grid section { min-height: 126px; border: 1px solid #111; padding: 6px; }
+.export-preview__grid section { min-height: 126px; border: 1px solid var(--admin-navy); padding: 6px; }
 .export-preview__grid h3, .export-preview__details h3 { margin: 0 0 6px; text-align: center; font-size: 12px; }
 .export-preview__party { display: grid; gap: 3px; }
 .export-preview table { width: 100%; margin-top: 8px; border-collapse: collapse; }
-.export-preview th, .export-preview td { border: 1px solid #111; padding: 5px; text-align: left; vertical-align: top; }
+.export-preview th, .export-preview td { border: 1px solid var(--admin-navy); padding: 5px; text-align: left; vertical-align: top; }
 .export-preview th { text-align: center; }
-.export-preview__details { min-height: 70px; margin-top: 8px; border: 1px solid #111; padding: 6px; }
+.export-preview__details { min-height: 70px; margin-top: 8px; border: 1px solid var(--admin-navy); padding: 6px; }
 .export-preview footer { margin-top: 34px; line-height: 1.8; }
 
 /* Printable document layouts mirror the commercial/proforma invoice and packing-list formats. */
-.export-document { color: #000; background: #fff; box-sizing: border-box; font-family: Arial, sans-serif; font-size: 11px; line-height: 1.4; margin: 0 auto; max-width: 1020px; min-height: 1280px; padding: 18px 22px; }
+.export-document { color: var(--admin-ink); background: var(--admin-white); box-sizing: border-box; font-family: Arial, sans-serif; font-size: 11px; line-height: 1.4; margin: 0 auto; max-width: 1020px; min-height: 1280px; padding: 18px 22px; }
 
 /* ── Title (centered, above header) ── */
 .export-document__title { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 12px; letter-spacing: 0.03em; }
@@ -3692,22 +3696,22 @@
 .export-document__reg-details { font-size: 9.5px !important; margin-top: 3px !important; }
 
 /* ── Dashed Separator Box ── */
-.export-document__dashed-box { border: 1px dashed #ccc; height: 26px; margin: 6px 0 10px; width: 100%; box-sizing: border-box; }
+.export-document__dashed-box { border: 1px dashed var(--admin-line); height: 26px; margin: 6px 0 10px; width: 100%; box-sizing: border-box; }
 
 /* ── Date/Invoice/AWB row (commercial/proforma) ── */
 .export-document__meta { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0 8px; font-size: 11px; }
 
 /* ── General Info bar ── */
-.export-document__bar { border: 1px solid #111; margin: 0 0 0; padding: 3px 6px; text-align: center; font-size: 11px; font-weight: 700; }
+.export-document__bar { border: 1px solid var(--admin-navy); margin: 0 0 0; padding: 3px 6px; text-align: center; font-size: 11px; font-weight: 700; }
 
 /* ── Two-column grid ── */
-.export-document__grid { display: grid; grid-template-columns: 1fr 1fr; border-left: 1px solid #111; border-top: 1px solid #111; }
+.export-document__grid { display: grid; grid-template-columns: 1fr 1fr; border-left: 1px solid var(--admin-navy); border-top: 1px solid var(--admin-navy); }
 .export-document__grid--three { grid-template-columns: repeat(3, 1fr); }
-.export-document__grid section { border-right: 1px solid #111; border-bottom: 1px solid #111; box-sizing: border-box; padding: 5px 7px; min-height: 100px; }
-.export-document__grid h3 { border-bottom: 1px solid #111; margin: -5px -7px 5px; padding: 3px 7px; text-align: center; font-size: 11px; font-weight: 700; background: #f9f9f9; }
+.export-document__grid section { border-right: 1px solid var(--admin-navy); border-bottom: 1px solid var(--admin-navy); box-sizing: border-box; padding: 5px 7px; min-height: 100px; }
+.export-document__grid h3 { border-bottom: 1px solid var(--admin-navy); margin: -5px -7px 5px; padding: 3px 7px; text-align: center; font-size: 11px; font-weight: 700; background: var(--admin-ivory-deep); }
 
 /* ── Party block ── */
-.export-doc-party { display: grid; gap: 2px; font-size: 10.5px; }
+.export-doc-party { display: grid; gap: 5px; font-size: 10.5px; }
 .export-doc-party p { margin: 2px 0; font-size: 10.5px; line-height: 1.35; }
 .export-doc-party b { display: inline; font-weight: 700; }
 .export-doc-party span { font-weight: 400; }
@@ -3717,52 +3721,52 @@
 
 /* ── Items table ── */
 .export-document table { border-collapse: collapse; margin-top: 8px; width: 100%; font-size: 10.5px; }
-.export-document th, .export-document td { border: 1px solid #111; padding: 4px 5px; vertical-align: top; }
-.export-document th { text-align: center; font-weight: 700; background: #f5f5f5; font-size: 10px; }
+.export-document th, .export-document td { border: 1px solid var(--admin-navy); padding: 4px 5px; vertical-align: top; }
+.export-document th { text-align: center; font-weight: 700; background: var(--admin-ivory-deep); font-size: 10px; }
 
 /* ── Compliance wrap (commercial/proforma) ── */
 .export-document__compliance-wrap { margin-top: 10px; }
 .export-document__compliance-wrap > b { display: block; font-size: 11px; margin-bottom: 4px; font-weight: 700; }
 .export-document__compliance-body { display: flex; gap: 14px; align-items: flex-start; }
-.export-document__compliance-box { border: 1px solid #111; min-height: 76px; padding: 6px; width: 58%; box-sizing: border-box; font-size: 11px; }
+.export-document__compliance-box { border: 1px solid var(--admin-navy); min-height: 76px; padding: 6px; width: 58%; box-sizing: border-box; font-size: 11px; }
 .export-document__compliance-totals { flex: 1; display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
 .export-document__compliance-totals > div { display: flex; justify-content: space-between; gap: 20px; width: 100%; font-size: 11px; }
 .export-document__compliance-totals > div > span:last-child { font-weight: 700; min-width: 60px; text-align: right; }
 
 /* ── Certify text ── */
-.export-document__certify { margin: 18px 0 0; font-style: italic; font-size: 11px; color: #222; }
+.export-document__certify { margin: 18px 0 0; font-style: italic; font-size: 11px; color: var(--admin-ink); }
 
 /* ── Packing list: right-aligned meta ── */
 .export-document__packing-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; padding: 6px 0; font-size: 11px; }
 
 /* ── Packing list references row ── */
 .export-document__references { display: flex; justify-content: space-between; align-items: flex-start; padding: 6px 0 10px; font-size: 11px; }
-.export-document__ref-underline { border-bottom: 1px solid #555; padding-bottom: 2px; min-width: 220px; display: inline-block; }
+.export-document__ref-underline { border-bottom: 1px solid var(--admin-navy); padding-bottom: 2px; min-width: 220px; display: inline-block; }
 .export-document__ref-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 
 /* ── Shipment Information section ── */
-.export-document__shipment { border: 1px solid #111; display: grid; grid-template-columns: 1fr 1fr; margin-top: 8px; }
-.export-document__shipment h3 { grid-column: 1 / -1; border-bottom: 1px solid #111; margin: 0; padding: 3px 7px; text-align: center; font-size: 11px; font-weight: 700; background: #f9f9f9; }
+.export-document__shipment { border: 1px solid var(--admin-navy); display: grid; grid-template-columns: 1fr 1fr; margin-top: 8px; }
+.export-document__shipment h3 { grid-column: 1 / -1; border-bottom: 1px solid var(--admin-navy); margin: 0; padding: 3px 7px; text-align: center; font-size: 11px; font-weight: 700; background: var(--admin-ivory-deep); }
 .export-document__shipment > div { padding: 5px 7px; }
-.export-document__shipment > div + div { border-left: 1px solid #111; }
+.export-document__shipment > div + div { border-left: 1px solid var(--admin-navy); }
 
 /* ── Packing totals (proper table format) ── */
 .export-document__packing-totals-wrapper { display: flex; justify-content: flex-end; align-items: flex-end; gap: 12px; margin-top: 8px; }
 .export-document__packing-totals-label { font-size: 11px; white-space: nowrap; align-self: center; }
 .export-document__packing-totals-table { border-collapse: collapse; font-size: 10.5px; }
-.export-document__packing-totals-table th, .export-document__packing-totals-table td { border: 1px solid #111; padding: 3px 8px; text-align: center; }
-.export-document__packing-totals-table th { background: #f5f5f5; font-weight: 700; }
+.export-document__packing-totals-table th, .export-document__packing-totals-table td { border: 1px solid var(--admin-navy); padding: 3px 8px; text-align: center; }
+.export-document__packing-totals-table th { background: var(--admin-ivory-deep); font-weight: 700; }
 
 /* ── Package description ── */
 .export-document__package { margin-top: 10px; }
 .export-document__package > b { font-size: 11px; display: block; margin-bottom: 3px; }
-.export-document__package p { border: 1px dashed #bbb; min-height: 34px; padding: 5px; margin: 0; }
+.export-document__package p { border: 1px dashed var(--admin-line); min-height: 34px; padding: 5px; margin: 0; }
 
 /* ── Footer with underlines ── */
 .export-document__footer { margin-top: 36px; }
 .export-document__footer-row { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 14px; }
 .export-document__footer-row > span:first-child { white-space: nowrap; font-size: 11px; min-width: 130px; }
-.export-document__footer-line { flex: 1; max-width: 340px; border-bottom: 1px solid #333; min-height: 18px; padding-bottom: 1px; font-size: 11px; }
+.export-document__footer-line { flex: 1; max-width: 340px; border-bottom: 1px solid var(--admin-navy); min-height: 18px; padding-bottom: 1px; font-size: 11px; }
 
 /* ── Export document options panel ── */
 .export-document-options { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--admin-line); border-radius: var(--admin-radius); overflow: hidden; }
