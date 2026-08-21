@@ -2,7 +2,11 @@ import bcrypt from "bcryptjs";
 import "../config/env.js";
 import { sequelize } from "../config/database.js";
 import { AdminUser, SiteSetting } from "../models/index.js";
-await sequelize.sync({ alter: true });
+if (process.env.DB_SYNC === "alter") {
+  await sequelize.sync({ alter: true });
+} else {
+  await sequelize.sync();
+}
 const defaults = {
   office_name: "SAALUVESA ENTERPRISES PRIVATE LIMITED",
   office_address:

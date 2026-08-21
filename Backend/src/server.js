@@ -76,7 +76,11 @@ const port = Number(process.env.PORT || 5000);
 async function start() {
   await ensureDatabase();
   await sequelize.authenticate();
-  if (process.env.DB_SYNC !== "false") await sequelize.sync({ alter: true });
+  if (process.env.DB_SYNC === "alter") {
+    await sequelize.sync({ alter: true });
+  } else if (process.env.DB_SYNC !== "false") {
+    await sequelize.sync();
+  }
   app.listen(port, () => console.log(`Saaluvesa API listening on ${port}`));
 }
 
